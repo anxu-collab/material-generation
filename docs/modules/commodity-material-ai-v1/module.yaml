@@ -1,0 +1,57 @@
+module_id: commodity-material-ai-v1
+target: F:/codex/laox_director_lab
+status: partial
+default_mode: dry_run
+model: claude-opus-5-5
+runtime_verified:
+  python_path_environment: 3.14.3
+  jsonschema_existing_version: 4.26.0
+  pytest_existing_version: 9.0.2
+  claude_cli_existing_version: 2.1.283
+  dependency_installations_this_round: 0
+components:
+  claude: official-cli-oauth-fixed-model
+  clef: native-systemone-state-questions
+  toonflow: existing-v2.0.5-mcp
+  h3: existing-adapter-blocked-current-boundary
+  vbench: existing-no-download-no-cpu
+budget:
+  paid_h3_calls: 0
+  weight_downloads: 0
+  max_active_owned_files: 45
+ownership:
+  zcode: [adapters/commodity_ai.py, tests/test_commodity_ai.py]
+  gpt_sol: [scripts/commodity-materials.py]
+  gpt_luna: [adapters/storyboard_team.py, tests/test_koc_materials.py]
+  coordinator: [docs/modules/commodity-material-ai-v1/MODULE.md, docs/modules/commodity-material-ai-v1/module.yaml, runtime/progress.json, runtime/changes.json, runtime/acceptance.json]
+execution:
+  coordinator_role: planner-reviewer
+  zcode_channel: orca-worker
+  run_id: run_5849cdb0a524
+  task_id: task_748d1c83d802
+  dispatch_id: ctx_a09013e757e5
+  status: partial-repair1-active
+  repair_task: task_6639d7fc5b36
+  repair_dispatch: ctx_0b0de15110e7
+  repair_attempts_used: 1
+  max_repair_attempts: 2
+  native_headless_first_attempt: timed-out-without-core-files
+verified:
+  toonflow_file_bridge: TEST-input-write-read-sha256-match
+  toonflow_node_display_edit: verified-TEST-only-actual-UI-raw-mode-edit-backread
+  toonflow_actual_claude_output: blocked-oauth-expired
+  bridge_tests: 37-passed-independent-rerun
+  ui_unit_checks: verified-UNIT-core-store-HTTP
+  ui_browser_display: verified-13-Mock-no-video-versions
+  initial_independent_focus: 95-passed-but-concrete-defects-found
+  review_verdict: REPAIR
+blocked:
+  - claude-oauth-expired-real-call
+  - clef-service-not-listening-live-capability-unverified
+  - vbench-human-dimensions-missing-dependencies
+  - h3-current-path-boundary-and-zero-budget
+  - no-eligible-existing-original-video
+not_run: [vbench-scoring, real-existing-material-review, claude-three-role-real-acceptance]
+history_archive: runtime/backups/commodity-material-ai-v1/historical-docs/archive-index.json
+evidence: runtime/evidence/commodity-material-ai-v1
+rollback: restore-recorded-own-files-only-retain-media-history-vendor

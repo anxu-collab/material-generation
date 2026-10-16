@@ -1,0 +1,117 @@
+{
+  "schema": "lab-minimax-official-config/v1",
+  "module": "product-material-pipeline-v1",
+  "addon": "h3-minimax-official-v1",
+  "created_utc": "2026-10-11T07:15:00+00:00",
+  "provenance_note": "Public contract/pricing snapshot only — NO credentials here. Field-level source URLs below; China create-doc page fetch timed out 2026-10-11 and is recorded honestly; model/API verified via global v2 API reference + China guide/pricing/quickstart pages.",
+
+  "provider": {
+    "id": "minimax_official_china",
+    "region": "china",
+    "base_url": "https://api.minimax.cn",
+    "base_url_pinned": true,
+    "base_url_note": "MINIMAX_API_BASE_URL may only repeat this exact value; any other host is rejected before key/network. Old official GitHub examples use api.minimaxi.com (international); China guide canonical is api.minimax.cn. Bearer token is never forwarded on redirects (redirects are not followed).",
+    "endpoints": {
+      "create": "/v2/video_generation",
+      "query_task": "/v2/query/video_generation/{task_id}",
+      "query_list": "/v2/query/video_generation"
+    },
+    "auth": {
+      "header": "Authorization",
+      "scheme": "Bearer",
+      "api_key_env": "MINIMAX_API_KEY",
+      "base_url_env": "MINIMAX_API_BASE_URL",
+      "autodl_key_fallback": false,
+      "dotenv_read": false,
+      "key_logging": false
+    },
+    "sources": [
+      {"url": "https://platform.minimax.io/docs/api-reference/video-generation-v2-create", "kind": "global_api_reference", "fetched_utc": "2026-10-11", "status": "fetched"},
+      {"url": "https://platform.minimax.cn/docs/guides/video-generation", "kind": "china_guide", "fetched_utc": "2026-10-11", "status": "fetched"},
+      {"url": "https://platform.minimax.cn/docs/api-reference/video-generation-v2-create", "kind": "china_create_reference", "status": "fetch_timeout_recorded_honestly"},
+      {"url": "https://platform.minimax.cn/docs/pricing/overview", "kind": "china_pricing", "fetched_utc": "2026-10-11", "status": "fetched"},
+      {"url": "https://platform.minimax.cn/docs/guides/quickstart-preparation", "kind": "china_key_preparation", "fetched_utc": "2026-10-11", "status": "fetched"}
+    ]
+  },
+
+  "model": {
+    "name": "MiniMax-H3",
+    "fallback_forbidden": ["MiniMax-Max", "Hailuo"],
+    "duration": {"type": "int", "min": 4, "max": 15, "reject": ["bool", "float", "string"]},
+    "resolutions": ["768P", "2K"],
+    "ratios": ["adaptive", "21:9", "16:9", "4:3", "1:1", "3:4", "9:16"],
+    "default_ratio": "9:16",
+    "prompt_max_chars": 7000,
+    "content_roles": ["text", "reference_image", "reference_video", "reference_audio"],
+    "rejected_roles": ["first_frame", "last_frame", "mixed"],
+    "ref2va_min_references": 1,
+    "body_max_bytes": 67108864,
+    "top_level_fields_permitted": ["model", "content", "resolution", "duration", "ratio"]
+  },
+
+  "media_limits": {
+    "image": {
+      "exts": [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif"],
+      "max_bytes": 31457280,
+      "min_dim": 256, "max_dim": 5760,
+      "aspect_min": 0.4, "aspect_max": 2.5,
+      "max_count": 9
+    },
+    "video": {
+      "exts": [".mp4", ".mov"],
+      "max_bytes": 52428800,
+      "video_codecs": ["h264", "hevc"],
+      "audio_codecs": ["aac", "mp3"],
+      "fps_min": 23.976, "fps_max": 60.0,
+      "min_dim": 256, "max_dim": 5760,
+      "aspect_min": 0.4, "aspect_max": 2.5,
+      "max_count": 3,
+      "each_duration_min": 2.0, "each_duration_max": 15.0,
+      "sum_duration_max": 15.0
+    },
+    "audio": {
+      "exts": [".wav", ".mp3"],
+      "max_bytes": 15728640,
+      "max_count": 3,
+      "each_duration_min": 2.0, "each_duration_max": 15.0,
+      "sum_duration_max": 15.0
+    },
+    "mixed_max_count": 12
+  },
+
+  "pricing": {
+    "currency": "CNY",
+    "snapshot_date": "2026-10-11",
+    "stale_after_days": 30,
+    "reconfirmed_utc": null,
+    "sources": [
+      "https://platform.minimax.cn/docs/pricing/overview",
+      "https://platform.minimax.cn/docs/guides/video-generation"
+    ],
+    "rates": {
+      "output_per_sec": {"768P": "0.50", "2K": "0.80"},
+      "input_video_per_sec": {"768P": "0.50", "2K": "0.80"},
+      "input_video_rate_note": "input video seconds are billed at the rate of the OUTPUT resolution tier; they must never be omitted from the estimate",
+      "input_image_first_free": 5,
+      "input_image_extra_each": "0.20",
+      "input_audio": "0"
+    },
+    "formula": "total_cny = output_seconds * output_rate[resolution] + sum(input_video_seconds) * input_video_rate[resolution] + max(input_image_count - 5, 0) * 0.20",
+    "estimate_disclaimer": "Published-tariff calculation, not an exact bill guarantee; actual billing is the platform's."
+  },
+
+  "authorization": {
+    "schema": "lab-h3-official-submit-authorization/v1",
+    "records_dir": "runtime/h3-minimax-official-v1/authorization",
+    "max_budget_cny": 200.0,
+    "max_calls": 1,
+    "requires": ["human_authorized=true", "consent provenance", "provider+model+base+request fingerprint+reference hashes+pricing policy hash", "fresh valid numeric estimate <= budget"]
+  },
+
+  "paths": {
+    "prepared_dir": "runtime/h3-minimax-official-v1/prepared",
+    "locks_dir": "runtime/h3-minimax-official-v1/locks",
+    "submissions_dir": "runtime/h3-minimax-official-v1/submissions",
+    "evidence_dir": "runtime/evidence/h3-minimax-official-v1"
+  }
+}

@@ -1,0 +1,22 @@
+# VBench/VBench2 Phase1 最小基础依赖（Python 3.10.9 venv: runtime/venvs/vbench）
+# 目标：import vbench / import vbench2 / vbench CLI --help / torch CUDA 探测。
+# 不含指标权重、不含 mmdet/mmyolo/LLaVA 等重依赖（后续路线，见 config/vbench_capabilities.json）。
+# torch/torchvision 必须用 CUDA 轮子（CPU 回退禁止）：
+#   pip install torch==2.3.1+cu121 torchvision==0.18.1+cu121 --index-url https://download.pytorch.org/whl/cu121
+numpy==1.26.4
+Pillow==10.2.0
+opencv-python==4.10.0.84
+decord==0.6.0
+tqdm==4.67.1
+scipy==1.10.1
+# vbench2/utils.py 追加需要
+PyYAML==6.0.2
+gdown==5.2.0
+scenedetect==0.6.5.2
+# repair1（R3）新增小型钉死软件依赖：让 motion_smoothness / Human_Anatomy / Human_Identity 的 import 探测推进到真实缺口
+# （omegaconf 修复 motion_smoothness；mmengine/imageio/einops 推进 VBench2 两个维度；传递依赖实际版本见
+#   runtime/evidence/deployment/vbench-venv-pip-freeze-repair1.txt，全部为小型纯/轻量轮子，无检测重栈、无权重）
+omegaconf==2.3.0
+imageio==2.36.1
+einops==0.8.0
+mmengine==0.10.7

@@ -1,0 +1,175 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:laox:director-lab:product-storyboards-v1",
+  "title": "Deterministic dry-run product storyboard plans (KOC rule adaptation)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "case_id", "created_utc", "policy_version", "planning", "product", "narration_segments", "refs", "shots", "source_bindings"],
+  "properties": {
+    "schema_version": {"const": "product-storyboards/v1"},
+    "case_id": {"$ref": "#/$defs/id"},
+    "created_utc": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T"},
+    "policy_version": {"type": "string", "minLength": 1, "maxLength": 64},
+    "planning": {
+      "type": "object", "additionalProperties": false,
+      "required": ["engine", "llm_invoked", "distinct_use_purposes"],
+      "properties": {
+        "engine": {"const": "deterministic-local-v1"},
+        "llm_invoked": {"const": false},
+        "distinct_use_purposes": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "action_provenance": {"type": "string", "maxLength": 500},
+        "native_storyboard_team_context": {"type": "string", "maxLength": 500}
+      }
+    },
+    "product": {
+      "type": "object", "additionalProperties": false,
+      "required": ["product_id", "identity_verified", "facts"],
+      "properties": {
+        "product_id": {"$ref": "#/$defs/id"},
+        "name": {"type": "string", "maxLength": 200,
+          "description": "Optional declared product name; part of the input the ACTION_OBJECT_MISMATCH guard scopes over."},
+        "subject_term": {"type": "string", "maxLength": 50,
+          "description": "Optional declared object term for this case's product (e.g. 果子); scopes repair fallback narration and the object-mismatch guard. Demo-case-specific wording lives here, never in planner templates."},
+        "identity_verified": {"type": "boolean"},
+        "facts": {
+          "type": "array", "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["text", "source_kind"],
+            "properties": {
+              "text": {"type": "string", "minLength": 1, "maxLength": 2000},
+              "source_kind": {"enum": ["fixture_evidence", "synthetic_test_input"]},
+              "source_ref": {"type": "string", "maxLength": 500}
+            }
+          }
+        }
+      }
+    },
+    "narration_segments": {
+      "type": "array", "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["segment_id", "text", "source_kind"],
+        "properties": {
+          "segment_id": {"$ref": "#/$defs/id"},
+          "text": {"type": "string", "minLength": 1, "maxLength": 2000},
+          "source_kind": {"enum": ["fixture_evidence", "synthetic_test_input"]},
+          "language": {"const": "zh"},
+          "duration_sec": {"type": "number", "exclusiveMinimum": 0, "maximum": 600,
+            "description": "Optional planned duration hint (seconds); the planner clamps it to the conservative verified limit on the 1920-tick grid."},
+          "action": {
+            "type": "object", "additionalProperties": false, "required": ["start", "process", "end"],
+            "properties": {
+              "start": {"type": "string", "minLength": 1, "maxLength": 2000},
+              "process": {"type": "array", "minItems": 0, "maxItems": 6, "items": {"type": "string", "maxLength": 2000}},
+              "end": {"type": "string", "minLength": 1, "maxLength": 2000}
+            },
+            "description": "Explicit per-segment action hint (EK-15). Without it the planner emits a placeholder and review RETURNs ACTION_HINT_MISSING — product actions are never invented from templates."},
+          "framing": {"type": "string", "maxLength": 200},
+          "camera": {"type": "string", "maxLength": 200},
+          "movement": {"type": "string", "maxLength": 200}
+        }
+      }
+    },
+    "refs": {
+      "type": "array", "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["ref_id", "path", "sha256", "role", "test_only"],
+        "properties": {
+          "ref_id": {"$ref": "#/$defs/id"},
+          "path": {"type": "string", "minLength": 1, "maxLength": 4096},
+          "sha256": {"$ref": "#/$defs/hash"},
+          "role": {"enum": ["product_appearance_demo", "demo_footage_reference", "structure_reference", "scale_reference"]},
+          "test_only": {"type": "boolean"}
+        }
+      }
+    },
+    "shots": {
+      "type": "array", "minItems": 1, "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["shot_id", "product_id", "version", "purpose", "narration", "refs", "action", "action_source", "ref_fit", "framing", "camera", "movement", "duration_sec", "model_capability", "must", "must_not", "needs_3d", "reuse", "audio", "generated", "counterexample_of"],
+        "properties": {
+          "shot_id": {"$ref": "#/$defs/id"},
+          "product_id": {"$ref": "#/$defs/id"},
+          "version": {"type": "integer", "minimum": 1},
+          "repair_attempts": {"type": "integer", "minimum": 0, "maximum": 2,
+            "description": "Deterministic repair rounds consumed by this shot; PASS shots stay at their locked version."},
+          "purpose": {"enum": ["packaging", "open_box", "takeout", "detail", "wrapup", "other"]},
+          "narration": {"type": "string", "maxLength": 2000},
+          "refs": {
+            "type": "array", "items": {
+              "type": "object", "additionalProperties": false,
+              "required": ["ref_id", "role"],
+              "properties": {"ref_id": {"$ref": "#/$defs/id"}, "role": {"type": "string", "maxLength": 200}}
+            }
+          },
+          "action": {
+            "type": "object", "additionalProperties": false,
+            "required": ["start", "process", "end"],
+            "properties": {
+              "start": {"type": "string", "minLength": 1, "maxLength": 2000},
+              "process": {"type": "array", "minItems": 0, "maxItems": 6, "items": {"type": "string", "maxLength": 2000}},
+              "end": {"type": "string", "minLength": 1, "maxLength": 2000}
+            }
+          },
+          "action_source": {"enum": ["case_input", "missing_hint"],
+            "description": "case_input: derived from the segment's declared action hint. missing_hint: placeholder — review RETURNs ACTION_HINT_MISSING; the planner never invents product actions."},
+          "ref_fit": {"enum": ["fitting", "none_fitting"],
+            "description": "none_fitting: no declared ref role can carry this purpose; review RETURNs NO_FITTING_REF_FOR_PURPOSE instead of falling back to an unrelated ref."},
+          "framing": {"type": "string", "maxLength": 200},
+          "camera": {"type": "string", "maxLength": 200},
+          "movement": {"type": "string", "maxLength": 200},
+          "duration_sec": {"oneOf": [{"type": "null"}, {"type": "number", "exclusiveMinimum": 0, "maximum": 600}]},
+          "model_capability": {
+            "type": "object", "additionalProperties": false,
+            "required": ["provenance", "verified", "max_clip_sec"],
+            "properties": {
+              "provenance": {"enum": ["fixture_probe_evidence", "unverified_assumed_conservative", "capability_unknown"]},
+              "verified": {"type": "boolean"},
+              "max_clip_sec": {"oneOf": [{"type": "null"}, {"type": "number", "exclusiveMinimum": 0}]}
+            }
+          },
+          "must": {"type": "array", "items": {"type": "string", "maxLength": 500}},
+          "must_not": {"type": "array", "items": {"type": "string", "maxLength": 500}},
+          "risk_flags": {"type": "array", "items": {"enum": ["product_partially_out_of_frame", "product_cropped", "occluded_product"]}},
+          "needs_3d": {"type": "boolean"},
+          "needs_3d_reason": {"oneOf": [{"type": "null"}, {"type": "string", "maxLength": 500}]},
+          "complex_grip": {"type": "boolean"},
+          "overlay_request": {"oneOf": [{"type": "null"}, {"enum": ["fixed_corner_label", "watermark", "in_frame_content_text"]}],
+            "description": "in_frame_content_text is allowed when the shot content requires it; fixed_corner_label and watermark are prohibited."},
+          "reuse": {"enum": ["single_use", "reusable_segment"]},
+          "audio": {
+            "type": "object", "additionalProperties": false,
+            "required": ["has_original", "must_preserve", "policy"],
+            "properties": {
+              "has_original": {"type": "boolean"},
+              "must_preserve": {"type": "boolean"},
+              "policy": {"enum": ["discard_allowed", "must_preserve_original"]}
+            },
+            "allOf": [{"if": {"properties": {"must_preserve": {"const": true}}, "required": ["must_preserve"]}, "then": {"properties": {"policy": {"const": "must_preserve_original"}}}}]
+          },
+          "generated": {
+            "type": "object", "additionalProperties": false,
+            "required": ["status", "verified_real_product_test"],
+            "properties": {
+              "status": {"enum": ["existing_footage_demo", "to_be_generated", "not_generated_test_only"]},
+              "verified_real_product_test": {"type": "boolean"},
+              "provider": {"oneOf": [{"type": "null"}, {"type": "string", "maxLength": 100}]}
+            }
+          },
+          "counterexample_of": {"oneOf": [{"type": "null"}, {"type": "string", "maxLength": 100}],
+            "description": "Non-null marks a deliberate counterexample shot exercising one review rule code."}
+        }
+      }
+    },
+    "source_bindings": {
+      "type": "array", "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["rule", "file", "section"],
+        "properties": {"rule": {"type": "string", "maxLength": 200}, "file": {"type": "string", "maxLength": 200}, "section": {"type": "string", "maxLength": 200}}
+      }
+    }
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"},
+    "hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  }
+}

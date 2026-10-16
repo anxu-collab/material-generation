@@ -1,0 +1,21 @@
+[
+  {
+    "kind": "image",
+    "path": "evidence/h3-autodl-v1/test-frame-a1-at1.0s.png",
+    "mime": "image/png",
+    "bytes": 1591174,
+    "sha256": "a93a5880aaf149eba1b21298bec1c01ad35c78d621e9209f89736577a285fe82",
+    "role_en": "TEST-only single-frame appearance/composition reference extracted read-only from the declared existing demo clip; not a real product photo or identity proof; not a guaranteed first frame.",
+    "asset_id": "test_frame",
+    "label": "<Picture 1>",
+    "request_field": "ref_image_0"
+  },
+  {
+    "kind": "audio",
+    "remote": true,
+    "role_en": "Official blank.wav URL declared by the live workflow schema as the required ref_audio_0 default; this silent B-roll request carries no voiceover and discards generated audio downstream.",
+    "asset_id": "blank_audio",
+    "label": "<Audio 1>",
+    "request_field": "ref_audio_0"
+  }
+]

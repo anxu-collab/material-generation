@@ -1,0 +1,11 @@
+{
+  "total_seconds": 5,
+  "person_seconds": 0,
+  "mg_seconds": 5,
+  "person_fraction": 0.0,
+  "warnings": [],
+  "status": "prepared_locally",
+  "generated_video": false,
+  "subtitle_timing": "planned_not_aligned",
+  "source_config_sha256": "21461d1e04c77edb4c7cd9f3636ebd066feb837bcc25c4d785d1e1faabb2ce9a"
+}

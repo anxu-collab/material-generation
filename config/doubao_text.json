@@ -1,0 +1,62 @@
+{
+  "provider": "ark_agent",
+  "model": "doubao-seed-2-1-turbo-260628",
+  "environment_id": "env-20261012040620-8aikk",
+  "industry": "healthcare",
+  "skills": {
+    "healthcare": {
+      "skill_id": "skill-20261012121740-5qhl2",
+      "version": "2",
+      "source_sha256": "1902e99a856c21de9ce6f6d040dfedfb9536bf8f1cbaea99835a7b0cd5492c0e"
+    },
+    "home": {
+      "skill_id": "skill-20261012132041-fgpz9",
+      "version": "7",
+      "source_sha256": "d63a64008be09acf017d64ebb68be463f96e15845f4cf8db7c0075d9ad494d9e"
+    },
+    "common": {
+      "skill_id": "skill-20261015072523-vqk9q",
+      "version": "12",
+      "source_sha256": "1df5d66c0ec8023681ab33757bcf48db27326446f9fc5fce6c507ae4e884df56"
+    }
+  },
+  "note": "provider=ark_agent 使用五个方舟 Managed Agents；所有角色绑定共用与可用行业 Skill，任务按 case.industry 仅加载指定行业。配置 industry 仅是旧默认值，不替代任务行业。model 字段仅用于 summarize。凭据由 ARK_API_KEY 或项目忽略文件解析，不写入此配置。sync-agents 对正文哈希、system及绑定版本做同步；云端已有模型配置保留。",
+  "agents": {
+    "creator": {
+      "agent_id": "agent-20261012040620-uq26h",
+      "max_tokens": 16384,
+      "note": "剧本+分镜（create / recreate）：15 镜全量 JSON 输出 8k-15k tokens，agent 内部模型需选输出上限高的一档"
+    },
+    "reviewer": {
+      "agent_id": "agent-20261012040620-jvs85",
+      "max_tokens": 8192,
+      "note": "分镜审核与提示词重写（review / repair）"
+    },
+    "motion": {
+      "agent_id": "agent-20261012040621-jk568",
+      "max_tokens": 8192,
+      "note": "图生视频动作提示词（motion）"
+    },
+    "pace": {
+      "agent_id": "agent-20261012040621-usweb",
+      "max_tokens": 8192,
+      "note": "成片节奏提示词重写（pace）"
+    },
+    "enricher": {
+      "agent_id": "agent-20261012040621-c3pxi",
+      "max_tokens": 8192,
+      "note": "静帧能力字段回填（enrich，3 镜一批，单批输出约 1-2k tokens）"
+    }
+  },
+  "video_analysis": {
+    "enabled": false,
+    "mode": "unverified",
+    "provider": null,
+    "model": null,
+    "max_concurrency": 1,
+    "timeout_sec": 90,
+    "max_batch": 3,
+    "max_frames": 12,
+    "auto_enqueue": false
+  }
+}

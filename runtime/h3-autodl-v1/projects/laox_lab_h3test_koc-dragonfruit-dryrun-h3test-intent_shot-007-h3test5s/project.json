@@ -1,0 +1,81 @@
+{
+  "schema": "laox-h3-template/v1",
+  "account": "laoX",
+  "project_id": "laox_lab_h3test_koc-dragonfruit-dryrun-h3test-intent_shot-007-h3test5s",
+  "title": "lab h3 silent TEST — shot-007-h3test5s",
+  "resolution": "768p竖(768*1376)",
+  "creation_mode": "x",
+  "seed": 20261011,
+  "template_pack": true,
+  "editorial_status": "TEMPLATE_PACK_LAB_TEST_SILENT_BROLL_NOT_FOR_PUBLICATION",
+  "style_en": "Natural realistic tabletop product demonstration with even lighting and a clean vertical composition; no faces, no captions, no logos, no watermarks, no readable interface text.",
+  "assets": {
+    "test_frame": {
+      "kind": "image",
+      "path": "evidence/h3-autodl-v1/test-frame-a1-at1.0s.png",
+      "role": "test_visual_reference",
+      "role_en": "TEST-only single-frame appearance/composition reference extracted read-only from the declared existing demo clip; not a real product photo or identity proof; not a guaranteed first frame."
+    },
+    "blank_audio": {
+      "kind": "audio",
+      "url": "https://codewithgpu.ks3-cn-beijing.ksyuncs.com/comfyui_api/blank/blank.wav",
+      "role": "mandatory_silent_placeholder",
+      "role_en": "Official blank.wav URL declared by the live workflow schema as the required ref_audio_0 default; this silent B-roll request carries no voiceover and discards generated audio downstream."
+    }
+  },
+  "segments": [
+    {
+      "id": "shot-007-h3test5s",
+      "duration": 5,
+      "prompt_zh": "subject_definitions:\n<Subject 1> 是本 TEST 生成意图展示的商品（火龙果，果子）。商品身份未经验证，画面不作为产品实测或身份证明。\n<Picture 1> 是从既有演示素材（ref 绑定源，SHA256 ebba26902592edba…）在 1.0 秒处只读抽取的单帧 TEST 参考图：仅提供商品外观、桌面场景与竖屏构图参考；不是实测产品照片，不保证首帧一致，禁止复刻源画面中的任何文字或水印。\n<Audio 1> 是官方工作流对必填 ref_audio_0 声明的 blank.wav 静音占位 URL；不是声音参考、不是口播授权。本片段为无口播静默 B-roll，生成的音频轨道在下游一律丢弃。\nsummary:\n[reference generation] 目标视频是一段 5 秒的无口播商品静默 B-roll TEST 片段（用途 detail）：画面呈现「切面的特写，籽粒看得很清楚。」。以 <Picture 1> 为外观与构图参考、<Audio 1> 为必填静音占位；不是对已验收参考素材的重渲染，不包含任何台词、字幕、固定角标或水印。\nretention_analysis:\n<Subject 1>（出现在 [Shot 1]）: partially_preserved - 保留该商品类别的整体外观与色彩关系；TEST 参考非产品实测，允许生成画面在细节上不同于参考帧。\n<Picture 1> ([Shot 1] 构图参考): weak_reference - 仅保留桌面商品演示的景别、构图与光感方向；不要求逐像素一致，不作为首帧锚点。\n<Audio 1>: weak_reference - 仅作接口必填占位，不提供任何可听内容。\ndetailed_description:\n竖屏 768x1376 自然写实桌面商品演示画面，光线均匀。全程无人物出镜（动作需要时仅允许持物的手部入画，不出现人脸）。整个片段一镜到底，无切换、无字幕、无角标、无水印、无可读文字。\n[Shot 1] 镜头对准果子切面，缓慢展示切面与籽粒细节，切面细节完整可见。取景：切面大特写；机位：缓推；运动：轻微推近。动作在片段内自然完成并保持到画面结束。\noverall_soundscape:\n无口播。整体为安静的室内环境底噪；<Audio 1> 仅是必填静音占位，不贡献任何可听内容，生成的音频轨道在下游被丢弃。\nnon_diegetic_music:\nN/A（本 TEST 片段不配乐）。",
+      "image_assets": [
+        "test_frame"
+      ],
+      "audio_assets": [
+        "blank_audio"
+      ],
+      "shots": [
+        {
+          "start": 0,
+          "end": 5,
+          "person_visible": false,
+          "delivery": "silent",
+          "dialogue": "",
+          "visual_en": "Tabletop product B-roll of 火龙果 — 切面大特写 (from storyboard).",
+          "camera_en": "缓推 / 轻微推近 — single continuous take, vertical 768x1376.",
+          "sound_en": "No voiceover; silent B-roll TEST; generated audio is discarded downstream.",
+          "transition_en": "No cuts, no overlays, no captions or watermarks."
+        }
+      ]
+    }
+  ],
+  "lab_h3_test_metadata": {
+    "schema": "lab-h3-test-metadata/v1",
+    "intent_id": "shot-007-h3test5s",
+    "storyboard_binding": {
+      "shot_id": "shot-007",
+      "version": 1,
+      "content_sha256": "e1b4464145a99d1f2db2a0117343ad89f235b8a1264c25aeafd61cfab31e5fc3",
+      "planned_duration_sec": 2.8
+    },
+    "generation_intent": {
+      "duration_sec": 5,
+      "silent": true,
+      "spoken": false,
+      "not_a_rerender_of": "a1"
+    },
+    "route_explanation": "template_pack=true + creation_mode=x reuses the runtime's existing authored-six-section + silent-delivery validation path for fragment packs; it is NOT an activation of the oldX X creative workflow.",
+    "spoken_locked": true,
+    "spoken": false,
+    "blank_audio_placeholder_not_voice": true,
+    "generated_audio_discarded_downstream": true,
+    "test_flag": true,
+    "for_publication": false,
+    "local_review": {
+      "engine": "deterministic-rules-v1",
+      "verdict": "PASS",
+      "content_sha256": "b72d9a98aaa232457860001629db500c5847b6da106e8deb2d0f106d64c28b87"
+    },
+    "created_utc": "2026-10-11T06:46:39.360801+00:00"
+  }
+}

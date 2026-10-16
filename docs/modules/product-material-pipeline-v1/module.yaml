@@ -1,0 +1,170 @@
+id: product-material-pipeline-v1
+name: 商品分镜素材生产管线 v1
+status: in_progress          # draft | in_progress | delivered | blocked
+created: 2026-10-11
+target_dir: F:/codex/laox_director_lab
+baseline: empty-directory-2026-10-11
+
+consumer_pain_visual_v1:
+  policy: consumer-pain-visual/v1
+  entry: scripts/material-flow.py
+  docs: docs/modules/product-material-pipeline-v1/MODULE.md
+  priority: consumer_task_obstacle_action_matching_result_before_aesthetics
+  shot_contract: consumer_need
+  pure_product_detail_max: 2
+  suggested_15_shot_mix: {pain_and_consequence: 5, action: 4, result: 4, product_detail: 2}
+  default_mix_is_not_minimum: true
+  visual_review: actual_pixels_required_hash_bound_no_auto_pass
+  gates: [plan_review, clef_text_only, actual_pixel_review, prepare_recheck, submit_recheck]
+  historical_media: preserve_no_auto_approval
+  verification: static_only_runtime_not_run
+  evidence: runtime/evidence/consumer-pain-visual-v1/
+
+objective: >
+  独立部署并最小整合 Toonflow v2.0.5（storyboardTeam director/writer/reviewer + 3D 导演台 + MCP）
+  + VBench/VBench2 基础环境 + MiniMax H3 适配契约核对，产出可复用商品分镜素材库（非成片平台）。
+
+components:
+  toonflow:
+    source: https://github.com/HBAI-Ltd/Toonflow-app
+    version: v2.0.5          # commit 2c7fb25…, released 2026-10-09
+    install_dir: vendor/toonflow
+    runtime: bun             # 以 tag 源码调查为准（README: bun 1.3.14, bun.lock）
+    mode: server             # bun run build:server / start:server, loopback
+  mcp:
+    implementation: toonflow-v2.0.5-builtin   # 具体文件路径待源码调查锁定
+    verification: protocol-client-real-call  # initialize -> tools/list -> workspace -> node ops
+  storyboard_team:
+    origin: toonflow-v2.0.5  # director/writer/reviewer；若该 tag 不含则记录事实并核对上游
+    reuse_only: true         # 不重写框架，仅商品规则扩展
+  director_3d:
+    origin: toonflow-v2.0.5  # directorStudio；导出序列/视频供 H3 参考
+  vbench:
+    source: https://github.com/Vchitect/VBench
+    includes_vbench2: true   # VBench-2.0 子目录
+    install_dir: vendor/vbench
+    priority_metrics: [subject_consistency, motion_smoothness]     # VBench 原版
+    vbench2_metrics: [Human_Anatomy, Human_Identity]               # VBench2，以锁定源码核实
+    gpu_policy: cuda-only-no-cpu-fallback
+    weights_download_allowed_this_round: false
+  h3_adapter:
+    status: historical_frozen     # 2026-10-11 h3-autodl-z0902-integration 起 z0903 不再是当前默认路由（当前消费者见 h3_adapter_z0902）；本块记录的 GET/prepare 为历史事实，adapters/h3_autodl.py 内该路由已 LEGACY_Z0903_ENABLED=False 冻结
+    origin: oldx-unique-runtime   # F:/codex/laox_account/app/runtime/h3/laox_h3.py 私有 importlib 实例复用（h3-autodl-v1，2026-10-11）
+    runtime_sha256: 8b173b0e4b02e03fb8c1289083c701b6583b01ef1fb8e9310e9699433e0f1851  # 漂移即拒载
+    execution_root: F:/codex/laox_director_lab/runtime   # 执行实例 ROOT（lock/run/preview 全落 lab）
+    env_keys: [AUTODL_ART_TOKEN, AUTODL_ART_BASE_URL]    # Runtime settings resolver 覆盖通道；旧 H3_* 占位已废弃
+    workflow_id: minimax_h3_z0903                        # Runtime 锁定，禁止覆盖
+    silent_broll_route: template_pack + creation_mode=x（Runtime 既有六段自撰+silent 兼容路由，非 X 工作流激活）
+    duration_policy: {lab_operational: [4,12], provider_real: [1,15], rounding: never}
+    paid_submit: guarded  # 仅人工授权记录（单指纹/max_calls=1/正有界预算）后经 Runtime.submit 委托；repair-1 起另需结构化报价：status=human_confirmed_platform_quote、currency=CNY、unit=CNY_per_single_call、estimate_cny 精确类型有限正数、workflow_id+request_fingerprint 双绑定、provenance(recorded_by/source/recorded_utc)，且 estimate<=budget.max_total；未知/超额/畸形报价与旧"仅文本依据"记录一律拒绝（fail-closed）
+    budget: 0             # 本轮零付费生成；真实 GET 工作流定义与本地请求构造已验证；billing_config 价目货币/单位/粒度未验证，永不换算成 CNY，本地估价门禁+单次调用绑定是本地能力非平台硬计费上限
+  h3_adapter_z0902:
+    origin: user-supplied-contract-static   # h3-autodl-z0902-integration（2026-10-11，Orca task_8c5482b0a195）；合同 USER_SUPPLIED_NOT_SERVER_VERIFIED，唯一事实源 config/autodl_h3_z0902.json
+    workflow_id: minimax_h3_z0902            # 当前活跃 AutoDL 路由；与 h3_adapter(z0903) 不共用提交路径，不一致即 fail-closed 无回退
+    project_default_resolution: "1088p竖(1088*1920)"   # 显式序列化；provider 自报默认 768p竖(768*1376) 不采用
+    resolution_options: ["480p竖(480*864)", "480p横(864*480)", "768p竖(768*1376)", "768p横(1376*768)", "1088p竖(1088*1920)", "1088p横(1920*1088)", "1440p竖(1440*2560)", "1440p横(2560*1440)"]
+    request_contract: {prompt: "str 1..20000 必填", duration: "int 1..15 默认5（bool/float 拒绝）", seed: "可选纯整数，缺省整个字段省略（不发明范围）", images: "ref_image_0 必填 + ref_image_1..5 各自独立选填（允许间隔，保留调用者槽位编号，禁止重排/填空图——revision 2），≤6 个具名槽位，https URL（签名/无扩展名不抓取、格式 unverified）", forbidden: "ref_audio_0/任何音频、ref_video/任何视频、官方 MiniMax content/model 字段、ref_image_6/未知字段"}
+    transport: env-only-http-json-reuse      # 未来 guarded 提交仅复用钉死 Runtime http_json（laox_h3.py 72-92 行）经 lab 私有实例；不用其 submit/settings/prepare_bundle/fetch_schema/validate_schema（z0903/audio/768p 锁定，EK-23）；配置仅 AUTODL_ART_BASE_URL/AUTODL_ART_TOKEN 环境变量，域限 autodl.art 官方 HTTPS，永不读 oldX autodl.env
+    guards: {network_enabled: false, generation_enabled: false, dry_run: true, gate_before_state_or_network: true, token_is_not_consent: true}
+    authorization_schema: lab-h3-submit-authorization/v2-z0902   # 新指纹绑定 workflow+规范请求+resolution；z0903 历史授权记录结构上不可命中；max_calls=1、结构化正有限 CNY 报价 ≤ 有界预算（repair-1 标准）；本轮零估价零授权
+    legacy_z0903: frozen                     # 旧 z0903 代码整段保留为 HISTORICAL（LEGACY_Z0903_ENABLED=False 公共入口先拒绝）；历史证据 runtime/evidence/h3-autodl-v1/ 原样
+    verification: NOT_RUN_USER_PROHIBITED    # 用户明令"你只是对接，不允许测试"：零测试/零 import/零 GET/零提交；z0903 历史 GET 不构成 z0902 服务器事实；验收=静态文件级映射
+  h3_minimax_official:
+    origin: official-china-direct-api          # h3-minimax-official-v1（2026-10-11 用户授权"全能视频参考接入官方的minimax"，Orca task_fb19c1d1ef72）
+    base_url: https://api.minimax.cn            # 中国站（官方指南 canonical；MINIMAX_API_BASE_URL 仅接受该精确值）
+    model: MiniMax-H3                           # 固定，无 Max/Hailuo 回退
+    endpoints: {create: "/v2/video_generation", query: "/v2/query/video_generation/{task_id}", query_list: "/v2/query/video_generation"}
+    content_roles: [text, reference_image, reference_video, reference_audio]  # Ref2VA 显式角色；first_frame/last_frame/mixed 拒绝
+    request_limits: {duration_int: [4,15], resolutions: ["768P", "2K"], ratios: ["adaptive", "21:9", "16:9", "4:3", "1:1", "3:4", "9:16"], default_ratio: "9:16", prompt_max_chars: 7000, ref2va_min_references: 1, body_max_bytes: 67108864}
+    media_limits: {image: {exts: [jpg, jpeg, png, webp, heic, heif], max_bytes: 30MB, dims: [256, 5760], aspect: [0.4, 2.5], max_count: 9}, video: {exts: [mp4, mov], max_bytes: 50MB, codecs: [h264, hevc], audio_codecs: [aac, mp3], fps: [23.976, 60], max_count: 3, each_duration: [2, 15], sum_duration: 15}, audio: {exts: [wav, mp3], max_bytes: 15MB, max_count: 3, each_duration: [2, 15], sum_duration: 15}, mixed_max_count: 12}
+    pricing_snapshot: config/minimax_official.json   # 中国站价目快照 2026-10-11（H3 输出 768P 0.50/s、2K 0.80/s；输入视频同档按输出分辨率计；前 5 张输入图免费、超出 0.20/张；音频免费）；报价=公布价目计算，非账单担保
+    credentials: {env_key: MINIMAX_API_KEY, env_base: MINIMAX_API_BASE_URL, autodl_fallback: forbidden, dotenv: forbidden}
+    prepare: local-only                         # 本地媒体 Base64 DataURI 组体（≤64MB），零上传零网络；按指纹原子落盘 runtime/h3-minimax-official-v1/prepared/
+    paid_submit: guarded-single                 # 授权记录（含 human_authorized/provenance/provider+model+base+指纹+参考哈希+价目哈希/max_calls=1/calls_used=0/预算≤200/新鲜数值估价≤预算）先行，跨进程指纹排他锁+不确定标记先于传输，一次尝试零重试，成功落 task_id；未授权/超预算/未知费用在任何 POST 前拒绝
+    query: read-only-bound                      # 只查本地登记过的 task_id，单次 30s 有界，校验返回 task/model/status，不打印完整签名 URL/任务历史
+    separation: 与 AutoDL 适配器/老X Runtime 完全分离（不导入、不改其行为；AutoDL 链保持原样）
+    budget: 0                                   # 本轮零付费调用零上传；认证（live GET）待用户配置 token 后另行执行
+  library:
+    db: library/materials.db
+    engine: sqlite
+    export: library/export/
+
+phases:
+  phase1_deploy:      { status: delivered, gate: "toonflow-http-up + mcp-protocol-verified + vbench-env-probed (2026-10-11 安装轮 verified + repair1 返修通过：R1 身份门禁 fail-closed 真实负面测试、R2 永久脚本节点生命周期/有界超时/exit3 诚实不可用、R3 矩阵对齐新鲜证据、R4 事实更正；见 runtime/acceptance.json 与 DEPLOYMENT_REPORT.md repair1 节)" }
+  koc_v1_integration: { status: in_progress, gate: "初轮 delivered 后 Coordinator 复核 REPAIR（4 项独立发现，coordinator-final-review-findings.json）；formal repair 1 已实施（EK-12..15：质检证据内容绑定+生产视觉审阅/身份硬门禁+根合同校验+通用输入去火龙果硬编码）；formal repair 2 已实施（EK-17：非哈希 source_sha256 在验证前 set.add 崩溃——形状校验前置，恶形条目显式 MANIFEST_ENTRY_INVALID 且合法兄弟继续，恶形条目带合法 SHA 保持 bound_shas 绑定阻断 Narrato 回流），待 Coordinator 独立复验；formal repair 计数=2/2（上限）。外部并发任务把消费端推进 r3 语义（service.py SyntaxError/shot_library gaps/split_fruit 超 Schema/planner 版本门禁），其回归失败属下游外部阻塞（EK-16），本轮如实上报不宣称全绿" }
+  phase2_storyboards: { status: not_run,     gate: ">=10 schema-valid distinct-purpose storyboards via real storyboardTeam + RETURN-fix-recheck loop" }
+  phase3_3d_h3:       { status: in_progress, gate: "H3 侧已交付（h3-autodl-v1，2026-10-11）：真实 workflow GET200+字段逐个溯源（必填 prompt/ref_image_0/ref_audio_0，无 video 输入，duration 1..15）+ 5s 静默 TEST 请求经原 Runtime 构造并过 live-schema 校验（auth_verification=not_run，付费 not_run）；formal repair 1 已实施（Coordinator 复核发现预算门禁只查文本依据长度——未知/超额报价被接受；现强制结构化报价合同+estimate<=budget，root 双反例拒绝，见 EK-21）；3D 预演导出仍 not_run" }
+  phase4_library:     { status: not_run,     gate: allowed test video -> tech/visual/VBench -> gated ingest + JSON export }
+
+koc_v1:
+  zip: imports/koc-video.zip (sha256 313a92cb…, 7 files hash-locked in config/koc_material_policy.json)
+  policy: config/koc_material_policy.json (every rule source-bound; ZIP self-execution/confirmation-card/native-speech/final-compositor defaults overridden off)
+  dry_run_case: cases/koc-dragonfruit-dryrun (23 shots/6 purposes -> 21 PASS, 2 blocked; TEST manifest, auto_edit_eligible=false, vbench not_run; repair-1 起动作/取景/关键词/人物/场景/provenance/技术字段全部 case 声明驱动——火龙果具象值在 case.json，通用输入不套用例模板)
+  consumer_bridge: F:/codex/laox_account/video_postprod scheduler/material_manifest.py + shot_library material_candidates + pipeline run_v2 optional branch + edit-job-v2 optional field (backward compatible; bound assets governed by manifest gate; repair-1 新增根合同校验/非对象条目隔离/质检证据内容绑定/生产视觉审阅+身份硬门禁——详见 EK-12..14；repair-2 新增 source_sha256 形状校验前置（非哈希值显式拒绝不崩溃，合法声明 SHA 保持绑定）——详见 EK-17)
+  evidence_contracts: schemas/material-manifest-v1.schema.json $defs.metrics_evidence + $defs.visual_review_evidence (归一化证据文件合同：绑定 source_sha256/material/version/window，status/verdict 必须有效；本轮无真实推理，正例夹具全部 UNIT ONLY 标注)
+  use_classification: 已交付 v1 词表快照（product_storyboards.USE_KEYWORDS == consumer 桥接 DELIVERED_USE_KEYWORDS，测试锁定）；消费端 r3 语义（open_packaging/split_fruit）为外部并发任务未收敛变更，桥接不实时消费（EK-16）
+  formal_repair_count: 2            # 最多 2；实现过程反馈批不计入（repair-2 = EK-17 非哈希 SHA 验证前置）
+  status_words_meaning: "delivered = 确定性干跑与桥接代码+测试证据；生产素材库 not ready（H3 演示夹具身份未验证，TEST only；repair-1 未晋升任何现有素材）"
+
+constraints:
+  write_scope: target-dir-only
+  protected: [F:/codex/laox_account, any-h3-pipeline]
+  secret_policy: env-only-read, no-echo, no-log, redacted-evidence
+  change_budget_own_files: 23          # 2026-10-11 v2 合同（ORCA_INSTALL_TASK_SPEC.yaml revision 2）收紧；旧 45 为 Phase2-4 后续路线预算
+  own_files_ceiling_h3_official_addon: 49   # h3-minimax-official-v1 用户授权附加：既有 45 + 仅 4 个新文件（adapter/CLI/tests/config），9 个 in-scope 文件（5 改 + 4 新），不新增无关归档/删除
+  own_files_ceiling_z0902_addon: 50         # h3-autodl-z0902-integration（2026-10-11，task_8c5482b0a195）：49 + 本轮唯一新增 1 文件 config/autodl_h3_z0902.json（7 个 in-scope 文件：6 改 + 1 新），用户禁止测试故无测试文件
+  own_files_ceiling_seedream_addon: 52      # seedream-image-v1（2026-10-11，用户请求火山 seedream 生图）：50 + 2 个新文件 adapters/seedream_image.py、tests/test_seedream_image.py
+  own_files_ceiling_material_flow_addon: 53  # material-flow-v1（2026-10-11，天益清流程走通）：52 + scripts/material-flow.py
+  retry_bound_per_fault: 2
+  ports: loopback-only, conflict-check-before-bind
+  background_processes: Start-Process -WindowStyle Hidden, stop-only-own
+
+acceptance:
+  matrix: runtime/acceptance.json        # verified | partial | blocked | not_run + evidence
+  report: docs/modules/product-material-pipeline-v1/DEPLOYMENT_REPORT.md
+  evidence: runtime/evidence/<phase>/
+
+rollbacks:
+  registry: runtime/changes.json
+  policy: stop-own-services + remove-own-files; keep user data, passed assets, evidence
+
+open_gaps:
+  # 2026-10-11 已关闭（h3-autodl-v1）：h3-contract-untested —— 真实 GET200+字段溯源+5s TEST 请求构造已验证；遗留 h3-paid-submit-pending-human-authorization（付费提交/认证/产出未验证，待人工授权）
+  # 2026-10-11 repair-1 已关闭：budget-quote-gate-text-only（未知/超额报价被接受）—— 结构化报价合同+estimate<=budget 已生效，见 EK-21
+  - h3-z0902-runtime-unverified-user-prohibited  # h3-autodl-z0902-integration 为 STATIC_ONLY：合同用户自供未经服务器验证，运行时/接口/服务器验收 NOT_RUN_USER_PROHIBITED；未来真实调用需用户新授权（token 配置永不构成授权）
+  - h3-paid-submit-pending-human-authorization   # submit-guarded 已就绪（repair-1 起需结构化报价）但零授权零提交；认证、轮询、下载与实际产出均未验证；真实平台报价须由可信协调方带 provenance 登记后方可授权
+  - h3-3d-previsual-not-run                      # phase3 的 3D 粗预演导出未执行
+  - h3-official-auth-pending-token               # h3-minimax-official-v1：官方中国站适配器/CLI/测试已交付（本地 prepare 就绪、报价含输入视频秒数、guarded submit/query 门禁齐全），但 MINIMAX_API_KEY 未配置——认证 live GET、付费提交与真实产出全部 not_run；本轮零付费零上传
+  - h3-official-paid-submit-pending-human-authorization  # 官方链付费提交待人工授权记录（价目哈希绑定+单指纹+预算）；TEST 产物为演示身份未验证素材，auto_edit_eligible=false
+  # 2026-10-11 已关闭：bash-tool-permission-failure（native headless 终止，Orca ZCode worker 实测可用）
+  # 2026-10-11 已关闭：python-3.14-vs-torch-compat（改用 Python 3.10.9 独立 venv）
+
+material_catalog_scheduler_v1:
+  status: partial
+  library_schema: lab-material-library/v3
+  extension_schema: lab-material-catalog/v1
+  entry: scripts/material-flow.py
+  new_source_files: 4
+  file_budget_scope: approved_plan_four_named_files_only_historical_ceiling_not_reconciled
+  concurrency: 1
+  default_enabled: false
+  default_auto_enqueue: false
+  real_transport: not_run_capability_unverified
+  paid_calls_this_change: 0
+  model_downloads_this_change: 0
+  verification_scope: changed_catalog_queue_library_interfaces_only
+  evidence: runtime/evidence/material-catalog-scheduler-v1/report.md
+
+generic_agent_skills_v2:
+  configuration_status: verified
+  behavior_generation_status: not_run
+  system: agents/ark_profiles.py
+  common_skill: agents/skills/material-production/SKILL.md
+  industry_skills: [healthcare, home]
+  agent_versions: {creator: 10, reviewer: 10, motion: 2, pace: 2, enricher: 2}
+  industry_skill_versions: {healthcare: '2', home: '2'}
+  common_skill_version: '1'
+  offline_tests_passed: 28
+  new_source_files: 1
+  historical_file_ceiling_reconciled: false
+  evidence: runtime/evidence/generic-agent-skills-v2-20261015/report.md

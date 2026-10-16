@@ -1,0 +1,73 @@
+{
+  "$comment": "VBench/VBench2 能力矩阵。2026-10-11 用户授权后，轻量权重已下到 runtime/cache（见 lightweight-weights.json）；LLaVA-Video-7B-Qwen2 与 Qwen2.5-7B-Instruct 未下载。env_ready 只代表维度模块可 import。所有指标分数仍是 not_run，本文件不代表已打分。",
+  "packages": {
+    "vbench": {
+      "source_commit": "fd18b3d055cb0fc6f066ca90fe2c3c8cbb698490",
+      "dir": "vendor/vbench",
+      "dimensions_entry": "vbench/__init__.py build_full_dimension_list",
+      "cli_entry": "vbench.cli.vbench:main (console script 'vbench')"
+    },
+    "vbench2": {
+      "source_commit": "same repo, subdirectory VBench-2.0",
+      "dir": "vendor/vbench/VBench-2.0",
+      "dimensions_entry": "VBench-2.0/vbench2/__init__.py build_full_dimension_list"
+    }
+  },
+  "repair1_dependency_additions": {
+    "installed_pinned": "omegaconf==2.3.0, imageio==2.36.1, einops==0.8.0, mmengine==0.10.7 (+small transitive wheels)",
+    "full_venv_record": "runtime/evidence/deployment/vbench-venv-pip-freeze-repair1.txt",
+    "not_installed_by_policy": "mmcv/mmdet 等 OpenMMLab 编译检测栈、retinaface 等 git 第三方栈仍未安装。轻量权重已于 2026-10-11 下载；两个 7B 模型仍未下载"
+  },
+  "priority_metrics": [
+    {
+      "name": "subject_consistency",
+      "family": "VBench (original)",
+      "module": "vbench/subject_consistency.py",
+      "extra_deps_required": ["DINO 权重（dino_vitbase16_pretrain.pth，facebookresearch/dino，经 torch.hub.load——依已装源码 subject_consistency.py 'Initialize DINO' 与 utils.py subject_consistency 分支；此前矩阵误写 openai-clip/CLIP，repair1 源码核对更正）"],
+      "weights_download_required": true,
+      "env_status": "env_ready (dim module importable, fresh evidence)",
+      "execution_status": "not_run (DINO weight on disk at runtime/cache/vbench/dino_model/dino_vitbase16_pretrain.pth; scoring not executed)"
+    },
+    {
+      "name": "motion_smoothness",
+      "family": "VBench (original)",
+      "module": "vbench/motion_smoothness.py",
+      "extra_deps_required": ["AMT 权重（third_party/amt：cfgs/AMT-S.yaml + amt_model/amt-s.pth，HF lalala125/AMT——依已装源码 motion_smoothness.py 导入 vbench.third_party.amt 与 utils.py motion_smoothness 分支；此前矩阵误写 RAFT，repair1 源码核对更正；RAFT 实属 dynamic_degree 维度）", "omegaconf==2.3.0 installed in repair1 (was the import blocker)"],
+      "weights_download_required": true,
+      "env_status": "env_ready (dim module importable after omegaconf, fresh evidence)",
+      "execution_status": "not_run (amt-s.pth on disk at runtime/cache/vbench/amt_model/amt-s.pth; scoring not executed)"
+    },
+    {
+      "name": "Human_Anatomy",
+      "family": "VBench2",
+      "module": "VBench-2.0/vbench2/human_anatomy.py",
+      "extra_deps_required": ["mmengine==0.10.7 installed in repair1 (previous blocker)", "mmcv/mmdet compiled detection stack + ViTDetector third_party (NOT installed: heavy detection stack, out of repair scope)"],
+      "weights_download_required": true,
+      "env_status": "blocked_deps (fresh evidence: ModuleNotFoundError 'mmcv'; progressed past mmengine)",
+      "execution_status": "not_run (YOLO-World XL and human/face/hand heads are on disk; mmcv still not installed; no scores)"
+    },
+    {
+      "name": "Human_Identity",
+      "family": "VBench2",
+      "module": "VBench-2.0/vbench2/human_identity.py",
+      "extra_deps_required": ["imageio==2.36.1 + einops==0.8.0 installed in repair1 (previous blocker)", "retinaface (Pytorch_Retinaface git third_party per official VBench-2.0 requirement.txt; not a pinned PyPI package, not installable under this round's small-pinned-software policy)", "cotracker/arcface third_party (not installed)"],
+      "weights_download_required": true,
+      "env_status": "blocked_deps (fresh evidence: ModuleNotFoundError 'retinaface'; progressed past imageio)",
+      "execution_status": "not_run (ArcFace resnet18_110.pth and RetinaFace zip are on disk; retinaface package still not installed; no scores)"
+    }
+  ],
+  "package_level_status": {
+    "import_vbench": "verified ok (fresh evidence, 16 dimensions)",
+    "import_vbench2": "verified ok (fresh evidence, 18 dimensions)",
+    "vbench_cli_help": "verified ok (fresh evidence, real subprocess exit 0)",
+    "torch_cuda": "verified available RTX 3080 (fresh evidence; --cuda-only fast-reject path in place)",
+    "import_ready_is_not_scoring_ready": "env_ready 只代表维度模块可 import；跑分还需权重（本轮零下载）与运行时依赖，全部指标执行保持 not_run，不产生任何分数"
+  },
+  "probe_methodology_note": "repair1 修正 scripts/check-vbench.py：VBench2 维度模块改用包内 import（importlib.import_module('vbench2.<dim>')）探测；旧 spec_from_file_location 裸执行文件会因相对导入失败而把探针伪影误报为缺依赖（曾掩盖真实缺口顺序）。",
+  "policy": {
+    "cpu_fallback": "forbidden",
+    "weights_download_this_round": "lightweight set downloaded 2026-10-11 into runtime/cache; two 7B models excluded",
+    "scoring_without_weights": "forbidden (would be fake scores)",
+    "scoring_status": "not_run"
+  }
+}

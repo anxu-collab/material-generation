@@ -1,0 +1,639 @@
+{
+  "module": "product-material-pipeline-v1",
+  "contract": "ORCA_INSTALL_TASK_SPEC.yaml revision 3 + ORCA_REPAIR1_TASK_SPEC.yaml (repair1 2026-10-11: coordinator-review-1 findings R1-R4; install acceptance re-verified; not video production)",
+  "assessed_at": "2026-10-11T04:09:00+08:00",
+  "executor": "orca-zcode-worker task_1090f90c8f11 / dispatch ctx_5991f76103e3; repair1 task_b5829526bb66 / dispatch ctx_f926863f84d9",
+  "items": [
+    {
+      "id": "D1",
+      "title": "Toonflow@v2.0.5 实际构建并在 Windows 启动（v3 loopback）",
+      "status": "verified",
+      "evidence": [
+        "tag v2.0.5 → commit 2c7fb257affb65777110fe4c6e60cd3c09187d9b（git rev-parse 实测）",
+        "bun.lock 冻结安装：bun install --frozen-lockfile 1810 包 exit 0，lock 未修改",
+        "Bun 1.3.14（packageManager 锁定版本，官方 windows-x64 zip 项目局部安装）",
+        "build:server + build:mcp + build:teams 全部 exit 0",
+        "HTTP 200 @127.0.0.1:3000（body=真实 Toonflow 前端 HTML 6197B）",
+        "netstat 实测：3000 仅 127.0.0.1（无 0.0.0.0/[::]，check-deployment non-loopback count=0）；10588=127.0.0.1",
+        "启停脚本幂等 + 启动后回环断言 + 三重身份登记（exe/entry/creation_time）",
+        "runtime/evidence/deployment/toonflow-webui-screenshot.png + coordinator-toonflow-home.png（主会话独立浏览器检查）",
+        "repair1: 原安装轮 pid 25260 自然退出后经加固版 start-toonflow.ps1 幂等重启为 pid 40644（server-info 过期记录自动清理）",
+        "repair1 复核：check-deployment 24 项 ALL PASS（HTTP 200 body 6197B；3000 仅 127.0.0.1 pid 40644；10588=127.0.0.1）"
+      ]
+    },
+    {
+      "id": "D2",
+      "title": "MCP 原生协议 initialize/tools-list 与真实非计费调用（工作区读取、临时测试节点管理、dry-run）",
+      "status": "verified",
+      "evidence": [
+        "独立协议客户端 scripts/verify-mcp.mjs --dry-run（repair1 重写：每次调用 AbortSignal.timeout(15s) + 整体 180s；非 200（通知 202 除外）/JSON-RPC error/工具 isError 一律失败）",
+        "initialize：serverInfo {toonflow, 0.0.0}，protocolVersion 2025-06-18；tools/list 46 工具（必需工具与 schema 在场断言）",
+        "getAppState 真实 workspaceRoot；workspaceFiles 生命周期 mkdir→writeBinary→readBinary（往返一致）→remove",
+        "节点生命周期进永久脚本（repair1 R2）：openProject→getCanvas(含 nodeTypes schema 发现, 8 类型)→addNode(remote-textNode)→findCanvasNodes(1)→getCanvasNodes→deleteNodes→复查 0；evidence mcp-verify-1791662075135.json exit 0",
+        "无页面诚实不可用：强制无页面分支实测 exit 3 unavailable（mcp-verify-unavailable-path-test.json）；有页面路径用 pre-existing 协调者页面连接实测",
+        "计费工具零调用（runAgent/媒体生成/供应商提交 NEVER_CALL + 单测守卫）；token 泄漏扫描：evidence 全部文件 0 命中（repair1-verification-summary.json）"
+      ]
+    },
+    {
+      "id": "D3",
+      "title": "storyboardTeam 与 3D 导演台：真实文件入口/构建产物/加载级部署存在 + 启用方式",
+      "status": "verified",
+      "evidence": [
+        "storyboardTeam 源码：packages/teams/storyboardTeam/team.json v2.0.0（entry=director，delegates writer/reviewer，members/*.md，skills/storyboard，knowledge/continuity.md）",
+        "真实构建（官方 bun run build:teams）：build/agents/storyboardTeam/ + storyboardTeam.agent.zip（exit 0）",
+        "真实加载（v3 wrapper agentsRoot → initializePlugins 首装）：runtime/toonflow-data/agents/storyboardTeam/ 已生成；GET /api/agents/get 200 返回活体团队注册表含 storyboardTeam（分镜创作团队 2.0.0）",
+        "备用启用路径（源码核实）：POST /api/agents/install（installTeam .agent.zip）+ PUT /api/agents/setEnabled",
+        "3D 导演台：packages/nodes/director3dNode（three 0.184.0）→ build/nodes/director3dNode.umd.js；真实页面 availableNodeTypes 含 remote-director3dNode（3D导演台）",
+        "实际调用状态：storyboardTeam not_run（需配置 LLM=付费）；3D 预演 not_run（Phase3）"
+      ]
+    },
+    {
+      "id": "D4",
+      "title": "独立 Python3.10 环境 + VBench/VBench2 关键 import/CLI 真实检查 + torch CUDA 可用",
+      "status": "verified",
+      "evidence": [
+        "venv：runtime/venvs/vbench（Python 3.10.9）；torch 2.3.1+cu121 CUDA 轮子；--cuda-only 快速拒绝逻辑在位",
+        "torch-cuda available=True（RTX 3080）；import vbench（16 维）/import vbench2（18 维）/CLI --help exit 0（新鲜证据 vbench-check-1791662049.json）",
+        "repair1 R3 补装小型钉死依赖：omegaconf 2.3.0 / imageio 2.36.1 / einops 0.8.0 / mmengine 0.10.7（+小型传递轮子；全量 vbench-venv-pip-freeze-repair1.txt；无检测重栈、零权重）",
+        "能力矩阵与新鲜证据对齐：subject_consistency/motion_smoothness 维度模块 importable（env_ready）；Human_Anatomy blocked_deps=mmcv（已越过 mmengine）；Human_Identity blocked_deps=retinaface（已越过 imageio，官方 requirement 为 git 第三方栈）",
+        "探针方法学修正：VBench2 维度改包内 import（旧 spec_from_file_location 裸执行把相对导入伪影误报为缺依赖）",
+        "权重零下载（no-weights-downloaded PASS）；全部指标分数 not_run（import-ready != scoring-ready）"
+      ]
+    },
+    {
+      "id": "D5",
+      "title": "独立范围、安全启停（含负面测试）、dry-run 与无模型下载保护、老工程无操作、清单清楚交付",
+      "status": "verified",
+      "evidence": [
+        "tests/test_deployment_guards.py：18/18 PASS（静态合同 9 + R1 真实负面测试 9：真实 Bun 夹具 different entry/empty entry/missing exe/missing time/forged path/stale time/unparseable time 全拒绝且夹具存活；完整记录经真实函数直调通过；真实记录按字节恢复）",
+        "check-deployment.ps1：ALL PASS（24 项，pid 40644 loopback-only）",
+        "stop 身份门禁两级化（repair1 R1）：Test-RecordIdentity（登记必填/可解析/规范 Bun+wrapper 路径匹配）+ Test-OwnProcess（进程 exe/命令行/创建时间元数据必须可得）；start 复用路径同规则 fail-closed",
+        "老工程零操作：未扫描/读取/写入 F:/codex/laox_account 与任何 h3_pipeline（单测反向守卫 + 执行记录）",
+        "预算：付费生成 0、权重下载 0、CPU 推理 0；缓存全指向目标内；全局配置/PATH/凭据零修改",
+        "runtime/changes.json 登记更新（repair1 依赖与服务 pid 40644）；回滚基线 repair1-baseline/（20 允许文件副本，无密钥）"
+      ]
+    }
+  ],
+  "future_roadmap_not_run": [
+    "Phase2 分镜生成（>=10 条、storyboardTeam 真实调用、RETURN 闭环）",
+    "Phase3 3D 预演导出 + H3 dry-run 契约核对（H3 env 缺口待用户提供）",
+    "Phase4 测试视频 VBench 指标与 SQLite 入库/导出",
+    "VBench 指标权重下载（待授权）、VBench2 重依赖（mmdet/LLaVA 等后续路线）"
+  ],
+  "known_deviations": [],
+  "resolved_deviations": [
+    "主端口 3000 全网卡绑定 → 已由 v3 scripts/toonflow-loopback.ts 解决（netstat 仅 127.0.0.1:3000，pid 25260）",
+    "stop 身份门禁字段缺失可绕过（fail-open）→ repair1 R1 两级门禁+真实负面测试解决"
+  ],
+  "verification_commands_results": [
+    {
+      "cmd": "C:/Users/anxu/AppData/Local/Programs/Python/Python310/python.exe -m unittest discover -s tests -p test_deployment_guards.py -v",
+      "result": "19/19 OK (repair1: 9 static + 9 R1 real-fixture + 1 positive start-reuse)"
+    },
+    {
+      "cmd": "powershell -NoProfile -File scripts/check-deployment.ps1",
+      "result": "ALL DEPLOYMENT CHECKS PASS (exit 0, 24 checks, pid 40644 loopback-only)"
+    },
+    {
+      "cmd": "powershell -NoProfile -File scripts/deploy.ps1 -DryRun",
+      "result": "DRYRUN PASS (exit 0)"
+    },
+    {
+      "cmd": "node scripts/verify-mcp.mjs --dry-run",
+      "result": "exit 0; strict callTool; node lifecycle verified (read_back_ids n/n); unavailable forced-branch exits 3"
+    },
+    {
+      "cmd": "runtime/venvs/vbench/Scripts/python.exe scripts/check-vbench.py --no-download --cuda-only",
+      "result": "exit 0; CUDA available; dims importable per fresh evidence; scores not_run"
+    },
+    {
+      "cmd": "parse configs+module.yaml; owned binds; live teams registry; token-leak scan",
+      "result": "all ok (repair1-verification-summary.json)"
+    }
+  ],
+  "assessed_at_source": "machine clock (R4: no hand-filled assessment time)",
+  "repair1": {
+    "review_reference": "runtime/evidence/deployment/coordinator-review-1.json (verdict REPAIR, R1-R4)",
+    "handled": {
+      "R1": "identity gate fail-closed + canonical record match + real negative tests (9/9)",
+      "R2": "verify-mcp.mjs bounded timeouts, error rejection, real node lifecycle in permanent script, exit-3 unavailable path",
+      "R3": "pinned small deps installed, probe methodology fixed, matrix aligned with fresh evidence, all scores stay not_run",
+      "R4": "EK-4 corrected (only RandomNumberGenerator.Fill is absent; [byte[]]::new(24) works), EK-8 fail-open record, H3 untested + scoped probe, machine timestamps"
+    },
+    "verification_summary": "runtime/evidence/deployment/repair1-verification-summary.json",
+    "rollback_baseline": "runtime/evidence/deployment/repair1-baseline/",
+    "coordinator_feedback_round": {
+      "delivery": "delivery_618a767f598c (5 status messages, 2026-10-10T19:33-19:54Z)",
+      "handled": {
+        "启动状态接续": "原终端释放后 server 25260 已退出属实；已按指示用既有 start-toonflow.ps1 恢复（无重装），真实 pid 40644 + loopback 记录",
+        "Windows命令环境": "tail/Unix 引号坑已避开；orca 调用未改 PATH；仅读写 F:/codex/laox_director_lab",
+        "R1正向复用(pid int)": "确认属实并修复：Confirm-OwnProcess 对 pid 单独正整数校验（不再混入字符串循环）；新增真实正向复用测试（第二次启动同 PID 40644、server-info.json 字节不变）",
+        "R2严格化": "确认属实并修复：callTool 统一抛错（isError/缺 result.content）；find 结果缺 nodes 数组=失败（不再默认 [] 算通过）；getCanvasNodes 断言实际读回全部创建 ID；最终 getCanvas 数量=基线；cleanup 复用创建时保存的 fixture target（不重取 connections[0]）；cleanup 失败禁止 exit 0",
+        "R3权重名称": "确认属实并更正：已读已装源码（subject_consistency.py DINO/torch.hub、motion_smoothness.py third_party.amt、utils.py 263/295 行权重分支），矩阵与报告改 DINO/AMT；RAFT 实属 dynamic_degree"
+      },
+      "post_feedback_verification": "unittest 19/19（新增 StartReusePositiveTests）；verify-mcp exit 0（read_back_ids 断言）；check-deployment ALL PASS；deploy -DryRun PASS",
+      "acknowledged": true
+    }
+  },
+  "h3_autodl_v1": {
+    "assessed_at": "2026-10-11T14:07:35.232885+08:00",
+    "result": "verified_local_contract_zero_paid",
+    "items": {
+      "live_schema_get_200": "verified",
+      "credential_configured_auth_not_run": "verified / not_run",
+      "silent_5s_test_request_via_original_runtime": "verified",
+      "guards_negative_tests": "verified (26 passed)",
+      "legacy_regression_31": "verified",
+      "readonly_oldx_protection": "verified (0 changed)",
+      "paid_generation": "not_run (zero authorization, by design)"
+    },
+    "evidence": "runtime/evidence/h3-autodl-v1/acceptance-h3-autodl-v1.json"
+  },
+  "commodity_material_ai_v1": {
+    "assessed_at": "2026-10-11T15:01:01.8752+08:00",
+    "status": "partial",
+    "core_implementation": "partial_repair1_required",
+    "bridge_file_roundtrip": "verified_TEST_input_only",
+    "bridge_unit_tests": {
+      "passed": 37,
+      "exit_code": 0
+    },
+    "ui_unit_checks": "verified_UNIT_ONLY",
+    "ui_core_integration": "verified_UNIT_ONLY_true_core_store_HTTP",
+    "claude_exact_model": "blocked_OAuth_expired",
+    "clef_native_decision": "blocked_service_refused",
+    "vbench_scoring": "not_run",
+    "real_existing_asset_review": "blocked_no_eligible_original_video",
+    "toonflow_node_display_edit": "verified_TEST_schema_input_only",
+    "production": "blocked_current_boundary_zero_budget",
+    "no_paid_h3_calls": true,
+    "no_weight_downloads": true,
+    "active_owned_files": {
+      "count": 45,
+      "limit": 45
+    },
+    "historical_safe_baseline": {
+      "passed": 39,
+      "failed": 1,
+      "failure": "existing expired-exception script reference; not hidden"
+    },
+    "active_owned_count": 45,
+    "initial_core_tests": {
+      "passed": 32,
+      "failed": 18,
+      "scope": "initial evolving draft, not final acceptance"
+    },
+    "initial_guard_repro": "verified failures in nonzero exit, NaN error record and mock/return approval",
+    "updated_at": "2026-10-11T16:37:16.343253+08:00",
+    "repair_task": "task_6639d7fc5b36",
+    "repair_dispatch": "ctx_0b0de15110e7",
+    "review_verdict": "REPAIR",
+    "repair_attempts_used": 1,
+    "independent_initial_focused": {
+      "passed": 95,
+      "failed": 0,
+      "scope": "UNIT ONLY before independent defect audit"
+    },
+    "ui_browser_display": "verified actual 3011 page with 13 clearly Mock/no-video versions, detail and version history; new stage display repair pending",
+    "archive_distinct_documents": 14,
+    "archive_revisions": 15,
+    "claude_generated_storyboards_to_toonflow": "blocked_OAuth_expired",
+    "toonflow_node_evidence": "runtime/evidence/commodity-material-ai-v1/toonflow-node-bridge.json",
+    "active_owned_limit": 45,
+    "active_count_includes_case_input": true,
+    "current_classification_entry": "docs/modules/product-material-pipeline-v1/IMPLEMENTATION_PLAN.md",
+    "archive": "runtime/backups/commodity-material-ai-v1/historical-docs/archive-index.json",
+    "toonflow_cli_bridge": {
+      "status": "verified_TEST_only",
+      "evidence": "runtime/evidence/commodity-material-ai-v1/cli-bridge-live.json",
+      "claude_chain": "not_run_OAuth_expired",
+      "model_calls": 0,
+      "h3_calls": 0
+    },
+    "coordinator_checkpoint": {
+      "status": "partial",
+      "worker_dispatch": "ctx_0b0de15110e7",
+      "worker_done_received": false,
+      "checkpoint_ack": "msg_119ba76f8197",
+      "scope": "remaining same-scope repair1 findings before worker_done",
+      "ui_stage_compatibility": "runtime/evidence/commodity-material-ai-v1/ui-stage-api-compatibility.json",
+      "clef_draft_unit17": "runtime/evidence/commodity-material-ai-v1/claude-clef-prep-audit.json",
+      "final_verification": "not_run-awaiting-stable-core",
+      "active_count": 45,
+      "active_count_includes_case_input": true,
+      "historical_documents": 14,
+      "historical_versions": 15,
+      "actual_model_inferences_in_checkpoint": 0,
+      "h3_calls_this_round": 0,
+      "model_downloads_this_round": 0
+    }
+  },
+  "consumer_pain_visual_v1": {
+    "updated_at": "2026-10-11T23:04:57.873465+08:00",
+    "policy": "consumer-pain-visual/v1",
+    "status": "partial",
+    "implementation": "rules_and_workflow_guards_written",
+    "static_verification": "verified",
+    "runtime_verification": "not_run_user_prohibited",
+    "evidence": "runtime/evidence/consumer-pain-visual-v1/static-review.json",
+    "model_calls": 0,
+    "network_calls": 0,
+    "paid_generations": 0,
+    "scope": "STATIC_ONLY",
+    "implemented_requirements": [
+      "consumer task/obstacle/function/source",
+      "visible pain and blind readback",
+      "matched pain/action/result chain",
+      "action-ready first frame",
+      "suggested 5/4/4/2 mix and <=2 pure details",
+      "actual-pixel review before video with current input hashes"
+    ],
+    "not_run": [
+      "unit/runtime tests",
+      "real image regeneration",
+      "actual image approval under new policy",
+      "Claude/Clef calls",
+      "H3 preparation/submission"
+    ],
+    "limitations": [
+      "Semantic judgments need a real pixel-capable reviewer; fields cannot prove someone looked.",
+      "Remote signed image URL content/lifetime not checked.",
+      "Bottom-level adapters are not governed by this orchestration gate; existing fee guards retained."
+    ]
+  },
+  "project_organization_20261013": {
+    "recorded_at": "2026-10-13T15:50:07.209832+08:00",
+    "status": "verified",
+    "scope": "static documentation organization only; historical acceptance above is not re-certified",
+    "static_verification": "verified",
+    "runtime_tests": "not_run",
+    "model_calls": 0,
+    "network_calls": 0,
+    "paid_generations": 0,
+    "production_acceptance_changed": false,
+    "known_limitations": [
+      "62 active owned files remain above recorded limit 53",
+      "one rejected clip video missing before organization",
+      "unknown elsewhere SQLite retained",
+      "33 duplicate media groups preserved because paths have distinct roles"
+    ],
+    "evidence": "runtime/evidence/project-organization-20261013/verification.json",
+    "verified_at": "2026-10-13T15:51:26.784557+08:00"
+  },
+  "project_directory_organization_20261013": {
+    "status": "verified",
+    "assessed_at": "2026-10-13T15:58:22+08:00",
+    "scope": "static filesystem, sqlite schema/counts, source references, JSON and hashes",
+    "results": [
+      "2 empty documentation directories moved to reversible archive",
+      "2 SQLite files moved byte-identically; 5 schema tables, all row counts 0",
+      "No references to archived paths in active source or documentation",
+      "All changed records and moved files backed up before mutation"
+    ],
+    "runtime_tests": "not_run",
+    "production_validation": "not_run"
+  },
+  "material_catalog_scheduler_v1": {
+    "updated_at": "2026-10-14T14:55:36.412159+08:00",
+    "status": "partial",
+    "implementation": "local catalog schema, queue and CLI implemented; no live multimodal transport",
+    "new_source_files": [
+      "schemas/material-catalog-v1.schema.json",
+      "adapters/material_catalog.py",
+      "adapters/material_scheduler.py",
+      "tests/test_material_catalog_scheduler.py"
+    ],
+    "targeted_tests": {
+      "catalog_queue": 29,
+      "existing_role_dispatch": 3,
+      "status": "verified"
+    },
+    "real_media_decode": {
+      "clip_id": "tyq-027-v1",
+      "fps": 24,
+      "frames": 6,
+      "status": "verified_decode_only"
+    },
+    "real_semantic_analysis": "not_run_capability_unverified",
+    "production_catalog_backfill": "not_run",
+    "model_calls": 0,
+    "network_calls": 0,
+    "evidence": "runtime/evidence/material-catalog-scheduler-v1/report.md",
+    "independent_review": {
+      "scope": "cancel, lease, authorization, publication recovery",
+      "findings": 1,
+      "important_fixed": 1,
+      "regression_log": "runtime/evidence/material-catalog-scheduler-v1/tests/12-cancel-fix.txt",
+      "final_verdict": "PASS",
+      "scope_note": "Read-only confirmation of original cancellation/publication P1 fix; no new findings"
+    }
+  },
+  "project_progress_20261014": {
+    "updated_at": "2026-10-14T15:27:13.464609+08:00",
+    "status": "verified",
+    "scope": "documentation_reconciliation_only",
+    "report": "runtime/evidence/project-progress-20261014/report.md",
+    "production_status": "partial",
+    "source_hashes_match_tested_version": 6,
+    "runtime_tests_this_organization": 0,
+    "model_calls": 0,
+    "service_actions": 0,
+    "history_preserved": true,
+    "previous_test_results": {
+      "catalog_queue": 29,
+      "role_dispatch": 3,
+      "rerun": false
+    },
+    "pending_requests": {
+      "real_model_analysis": {
+        "user_requested": true,
+        "status": "not_run",
+        "prerequisite": "verified multimodal transport, bounded call and actual-output review"
+      },
+      "wechat_pat_trigger": {
+        "user_requested": true,
+        "status": "not_run",
+        "condition": "real model analysis passes",
+        "missing": "robot project path or name",
+        "clarification": "WeChat pat/pat notification trigger, not filming settings"
+      }
+    },
+    "backup_manifest": "runtime/evidence/project-progress-20261014/baseline.json",
+    "superseded_priority_by": "daily_goods_skill_resume_20261014"
+  },
+  "daily_goods_skill_resume_20261014": {
+    "updated_at": "2026-10-14T17:18:24.059198+08:00",
+    "status": "partial",
+    "current_focus": "daily household goods skill design and consolidation",
+    "skill_path": "agents/skills/industry-home/SKILL.md",
+    "historical_status": "2026-10-12 shaped v2",
+    "observed_issues": [
+      "duplicate section 0",
+      "scope centered on storage, cable organization, fixing and cleaning tools"
+    ],
+    "skill_edited_this_turn": false,
+    "cloud_synced_this_turn": false,
+    "robot_action": "leave unchanged; no start, stop or pat configuration",
+    "prior_real_analysis_request": "not_run; retained but not current priority"
+  },
+  "wx_channels_download_20261014": {
+    "status": "partial",
+    "scope": "download tool deployment only",
+    "updated_at": "2026-10-14T19:51:50.342644+08:00",
+    "version": "v260907",
+    "evidence": "runtime/evidence/wx-channels-download-20261014/deployment.json",
+    "added": "vendor/tools/wx_channels_download/",
+    "authorization": "User authorized CA and temporary proxy",
+    "global_changes": [
+      "unique public CA imported to CurrentUser/Root",
+      "HKCU ProxyEnable and ProxyServer temporarily configured; previous values stored locally"
+    ],
+    "next": "Video button absent: diagnosis ongoing; debug.error enabled, await reopened page diagnostic error. Evidence: runtime/evidence/wx-channels-download-20261014/missing-button-diagnosis.json",
+    "not_run": [
+      "real video download",
+      "stop-and-restore runtime validation blocked by policy"
+    ],
+    "rollback": "Project stop command targets only the recorded matching process and restores saved proxy when still owned. Certificate retained; removal must target only the recorded thumbprint. Do not delete downloads."
+  },
+  "res_downloader_20261014": {
+    "summary": "resd-mini local build deployed; captured author videos; one video downloaded and fully decoded; proxy close/reopen verified",
+    "updated_at": "2026-10-14T20:24:54.3104048+08:00",
+    "download": "vendor/tools/res-downloader/Downloads/别只做表面护理真正的_20261014202319.mp4",
+    "status": "verified",
+    "evidence": "vendor/tools/res-downloader/evidence/deployment.json"
+  },
+  "generic_agent_skills_v2": {
+    "updated_at": "2026-10-15T07:29:37.317967+00:00",
+    "status": "verified",
+    "scope": "generic agent/skill configuration refactor only",
+    "evidence": "runtime/evidence/generic-agent-skills-v2-20261015/report.md",
+    "offline_tests": 28,
+    "target_model_behavior": "not_run",
+    "paid_generation_calls": 0,
+    "cloud_skill_versions": {
+      "healthcare": "2",
+      "home": "2",
+      "common": "1"
+    },
+    "cloud_agent_versions": {
+      "creator": 10,
+      "reviewer": 10,
+      "motion": 2,
+      "pace": 2,
+      "enricher": 2
+    }
+  },
+  "home_stand_creation_20261015": {
+    "updated_at": "2026-10-15T08:45:29.188328+00:00",
+    "status": "partial",
+    "text_draft": "verified",
+    "scope": "home stand first-round text creation and persona configuration",
+    "home_skill_version": "3",
+    "common_skill_version": "1",
+    "healthcare_skill_version": "2",
+    "cloud_agent_versions": {
+      "creator": 11,
+      "reviewer": 11,
+      "motion": 3,
+      "pace": 3,
+      "enricher": 3
+    },
+    "model_unchanged": true,
+    "text_requests": 4,
+    "media_generation_calls": 0,
+    "no_duplicate_submission": true,
+    "creator_status": "completed_recovered",
+    "summary_status": "completed_with_scope_overreach_not_adopted",
+    "review_status": "cloud_pass_rejected_by_main",
+    "revision_status": "completed_contract_rejected_then_explicit_main_edit",
+    "final_cloud_review": "not_run_on_revised_draft",
+    "pixel_review": "not_run",
+    "production_ready": false,
+    "shots": 6,
+    "planned_duration_sec": 28,
+    "transport_tests_passed": 31,
+    "case": "runtime/evidence/home-stand-creation-20261015/case.json",
+    "draft": "runtime/evidence/home-stand-creation-20261015/桌面支架_首轮分镜.md",
+    "structured_draft": "runtime/evidence/home-stand-creation-20261015/storyboard-reviewed.json",
+    "evidence": "runtime/evidence/home-stand-creation-20261015/report.md",
+    "remaining": [
+      "Fresh plan review of selected final draft before production",
+      "Actual image generation and pixel review not performed",
+      "Persistent automatic recovery of interrupted cloud streams not implemented"
+    ]
+  },
+  "reviewer_skill_regression_20261015": {
+    "updated_at": "2026-10-15T09:26:20.995346+00:00",
+    "status": "partial",
+    "skill_deployment": "verified",
+    "mechanical_gate": "verified",
+    "semantic_reliability": "partial",
+    "common_version": "4",
+    "home_version": "6",
+    "healthcare_version": "2",
+    "agent_versions": {
+      "creator": 14,
+      "reviewer": 14,
+      "motion": 6,
+      "pace": 6,
+      "enricher": 6
+    },
+    "systems_and_models_unchanged": true,
+    "actual_review_agent_versions": [
+      12,
+      13
+    ],
+    "latest_binding_inference": "not_run_v14_machine_contract_addition",
+    "text_requests": 4,
+    "current_cloud_verdict": "pass",
+    "current_contract": "rejected_missing_reference_ordinals",
+    "production_ready": false,
+    "storyboard_unchanged": true,
+    "no_manual_cloud_verdict_override": true,
+    "tests_passed": 38,
+    "media_generation_calls": 0,
+    "evidence": "runtime/evidence/reviewer-skill-regression-20261015/report.md",
+    "result": "runtime/evidence/reviewer-skill-regression-20261015/复审结果.md",
+    "remaining": [
+      "Cloud still misses some first-frame conflicts and exceeds edit boundaries",
+      "Current reviewer output removed required image ordinals and was rejected",
+      "Latest binding metadata addition was not followed by another model request",
+      "No actual image/pixel verification"
+    ]
+  },
+  "home_cloud_closure_20261015": {
+    "status": "verified",
+    "scope": "cloud_text_creation_and_review",
+    "updated_at": "2026-10-15T11:32:28.219112+00:00",
+    "common_version": "7",
+    "home_version": "7",
+    "agent_versions": {
+      "creator": 17,
+      "reviewer": 17,
+      "motion": 9,
+      "pace": 9,
+      "enricher": 9
+    },
+    "final_review_session": "sesn-20261015112012-094q5",
+    "cloud_review": "pass",
+    "formal_plan_gate": "verified",
+    "regression": "needs_rework_correctly_returned_to_creator",
+    "text_requests": 9,
+    "manual_storyboard_edits": 0,
+    "manual_verdict_overrides": 0,
+    "media_generation_calls": 0,
+    "pixel_review": "not_run",
+    "Clef": "not_run",
+    "production_ready": false,
+    "tests_passed": 39,
+    "run": "runtime/material-flow/laox-stand-cloud-closed-20261015",
+    "storyboard": "runtime/evidence/home-cloud-closure-20261015/桌面支架_云端修正版.md",
+    "evidence": "runtime/evidence/home-cloud-closure-20261015/report.md"
+  },
+  "home_image_closure_20261015": {
+    "status": "blocked",
+    "task_complete": false,
+    "stage": "external_cloud_review_service_repeated_model_errors",
+    "updated_utc": "2026-10-15T14:45:17.745717+00:00",
+    "session_id": "sesn-20261015141736-qhk6v",
+    "remote_status_at_last_check": "running",
+    "platform_model_errors": 2,
+    "error_detail": "is_error=true and zero reported usage twice; no error code/message exposed; cause unknown",
+    "generation_backend": "AutoDL ComfyUI existing FireRed1.1; static setup only, NOT executed",
+    "added_images": 0,
+    "product_generated_attempts": 32,
+    "existing_product_cap": 40,
+    "remaining_attempts": 8,
+    "effective_selection_changed": false,
+    "automatic_continuation": "stopped; both observer/continuation exit1",
+    "cloud_session_cancelled": false,
+    "inference_resubmitted": false,
+    "last_formal_run": "runtime/material-flow/laox-stand-home-image-20261015",
+    "last_formal_gate": "failed scene_spread0.445737; other6pass",
+    "latest_creation": "runtime/evidence/home-image-closure-20261015/repairgate3-raw.json",
+    "latest_review": "not returned",
+    "evidence": "runtime/evidence/home-image-closure-20261015/report.md",
+    "recovery": "On explicit resumption or concrete service change, GET existing session first; recover same-session output only, no repeated inference. Validate actual cloud contract, bind immutable repair3 run, full original Clef, first AutoDL image then remaining authorized images, true cloud blind+compare and hash validation, only then backed-up effective selection replacement. No video authorized.",
+    "accepted": false,
+    "verified_subparts": [
+      "real byte-image cloud probe; not production pixel pass",
+      "cloud Skills readback",
+      "full Clef projections and resource release",
+      "static AutoDL graph/node/reference compatibility",
+      "guards negative tests"
+    ],
+    "not_run": [
+      "AutoDL inference",
+      "production-image blind/compare",
+      "effective-set replacement",
+      "video"
+    ]
+  },
+  "shot_admission_20261015": {
+    "status": "partial",
+    "updated_at": "2026-10-15T16:06:08.872014+00:00",
+    "generated_product_total": 37,
+    "generated_product_limit": 40,
+    "batch_attempts": 5,
+    "batch_limit": 8,
+    "pixel_approved": 0,
+    "effective_set_changed": false,
+    "video_authorized": false,
+    "tests": "tests.test_ark_agent.ShotAdmission: 9 passed",
+    "cloud_sessions": {
+      "pair_compare": "sesn-20261015152138-k99eo",
+      "review0203": "sesn-20261015150743-iv7iv",
+      "review0406": "sesn-20261015152104-e7mn2"
+    },
+    "evidence_dir": "runtime\\evidence\\home-image-closure-20261015",
+    "independent_verification": {
+      "executor": "parent independent review",
+      "command": "python -m unittest discover -s tests -p test_ark_agent.py",
+      "tests": 57,
+      "passed": 57,
+      "elapsed_seconds": 24.704,
+      "exit_code": 0,
+      "source": "parent actual command output on2026-10-16"
+    },
+    "remaining_attempts": 3,
+    "per_shot": {
+      "01": {
+        "text": "pass",
+        "generation": "v1_completed",
+        "pixel": "fail"
+      },
+      "02": {
+        "text": "ready",
+        "generation": "not_run",
+        "pixel": "not_run"
+      },
+      "03": {
+        "text": "pass",
+        "generation": "v1_completed",
+        "pixel": "fail"
+      },
+      "04": {
+        "text": "pass",
+        "generation": "v1_completed",
+        "pixel": "fail"
+      },
+      "05": {
+        "text": "pass",
+        "generation": "v1_completed",
+        "pixel": "fail"
+      },
+      "06": {
+        "text": "pass",
+        "generation": "v1_completed",
+        "pixel": "fail"
+      }
+    },
+    "common_skill": 12,
+    "home_skill": 7,
+    "remaining_plan": "One bounded shot03 prompt repair only after cloud reviewer passes; no other generation before diagnosis decision",
+    "budget_gap": "5 generated images failed cloud pixel audit +02 ungenerated: at least6 successful outputs still needed; remaining3",
+    "user_paused": true,
+    "new_submissions_allowed": false,
+    "pause_evidence": "runtime\\evidence\\home-image-closure-20261015\\paused-20261016.json"
+  }
+}

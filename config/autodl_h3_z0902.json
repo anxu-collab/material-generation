@@ -1,0 +1,68 @@
+{
+  "schema": "lab-autodl-h3-z0902-config/v1",
+  "workflow": "minimax_h3_z0902",
+  "provenance": {
+    "contract_source": "USER_SUPPLIED_NOT_SERVER_VERIFIED",
+    "recorded_utc": "2026-10-11T08:11:37Z",
+    "recorded_by": "orca coordinator run_10251b932a8e task_8c5482b0a195 (user message: minimax_h3_z0902, default 1088p竖(1088*1920), user-supplied image-only request fields)",
+    "runtime_verification": "NOT_RUN_USER_PROHIBITED",
+    "notes": "User explicitly forbade tests and any API calls (你只是对接，不允许测试). No GET, no schema fetch, no doctor, no submit was performed for z0902. Historical live GET evidence for z0903 (h3-autodl-v1 era evidence under runtime/evidence/h3-autodl-v1/) proves nothing about this z0902 contract."
+  },
+  "request_contract": {
+    "prompt": {"required": true, "type": "string", "min_length": 1, "max_length": 20000},
+    "duration": {"required": false, "type": "integer", "minimum": 1, "maximum": 15, "default": 5},
+    "seed": {"required": false, "type": "integer", "omit_when_absent": true, "range_policy": "user contract declares plain integer with no range; adapter enforces exact int type (bool/float rejected) and invents no 32-bit or other limits"},
+    "resolution": {
+      "required": false,
+      "type": "enum",
+      "options": [
+        "480p竖(480*864)",
+        "480p横(864*480)",
+        "768p竖(768*1376)",
+        "768p横(1376*768)",
+        "1088p竖(1088*1920)",
+        "1088p横(1920*1088)",
+        "1440p竖(1440*2560)",
+        "1440p横(2560*1440)"
+      ],
+      "project_default": "1088p竖(1088*1920)",
+      "serialization": "always explicitly serialized in the request; when the caller omits resolution the project default 1088p竖(1088*1920) is written, never the provider declared default"
+    },
+    "ref_image_0": {"required": true, "type": "URL", "formats": ["JPG", "PNG", "WebP"]},
+    "ref_image_1_to_5": {"required": false, "type": "URL", "formats": ["JPG", "PNG", "WebP"], "max_count": 6, "slot_policy": "ref_image_0 required; each of ref_image_1..5 independently optional (gaps allowed, e.g. image0+image5); preserve the caller's exact slot names and order — never renumber, never fill placeholder images (TaskSpec revision 2, 2026-10-11)"},
+    "url_policy": {
+      "scheme": "https only, with hostname, no userinfo (mirrors the pinned oldX Runtime remote-asset rule)",
+      "format_verification": "UNVERIFIED — user URLs may be signed and carry no file extension; the adapter never fetches them and invents no server-side validation",
+      "forbidden_uri_kinds": ["data:", "file:", "audio file URLs", "video file URLs"]
+    },
+    "forbidden_fields": [
+      "ref_audio_0 or any audio input",
+      "ref_video or any video input",
+      "official MiniMax content/model fields (model, content role blocks, ratio — those belong to h3_minimax_official)",
+      "ref_image_6 or any extra unknown field"
+    ]
+  },
+  "provider_declared_default_resolution": "768p竖(768*1376)",
+  "project_default_resolution": "1088p竖(1088*1920)",
+  "transport": {
+    "provider": "AutoDL",
+    "endpoint_pattern": "{base}/api/v1/comfyui/comfyui_workflow/minimax_h3_z0902",
+    "base_url_env": "AUTODL_ART_BASE_URL",
+    "token_env": "AUTODL_ART_TOKEN",
+    "official_domains_only": ["https://autodl.art", "https://www.autodl.art"],
+    "config_resolution": "ENV_ONLY — never read oldX app/api/autodl.env or any env file; the pinned oldX Runtime settings()/fetch_schema()/submit()/prepare_bundle() are z0903-locked and are NOT used on this route",
+    "reused_low_level_method": "oldX Runtime http_json (laox_h3.py lines 72-92) through the private lab-rooted importlib instance only; single existing transport, no duplicate client",
+    "workflow_override_policy": "fail closed — any workflow value other than minimax_h3_z0902 in this config or in code paths refuses with no fallback to z0903 or any other workflow"
+  },
+  "guards": {
+    "network_enabled": false,
+    "generation_enabled": false,
+    "dry_run": true,
+    "max_calls_per_authorization": 1,
+    "max_budget_cny": 200.0,
+    "authorization_schema": "lab-h3-submit-authorization/v2-z0902",
+    "token_is_not_consent": true,
+    "note": "Configuring AUTODL_ART_TOKEN or editing this file can never enable network or generation by itself; enabling requires an explicit coordinated config change plus a human authorization record bound to the exact z0902 request fingerprint."
+  },
+  "credentials": "NONE — this file carries no credentials and no URLs to credentials; see transport.*_env keys"
+}

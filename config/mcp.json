@@ -1,0 +1,60 @@
+{
+  "$comment": "Toonflow v2.0.5 原生 MCP 连接契约（协议客户端实测用，非全局挂载）。端点/凭证路径来自官方源码 packages/mcp/README.md 与 apps/server/src/utils/mcp/*.ts。",
+  "client_mode": "protocol-client",
+  "client_mode_note": "本配置供 scripts/verify-mcp.mjs 作为独立 MCP 协议客户端直连 Toonflow；与把 MCP server 挂载进 Codex/ZCode 全局配置是两回事，本仓库不改任何全局 MCP 配置。",
+  "server": {
+    "transport": "streamable-http",
+    "endpoint": "http://127.0.0.1:10588/mcp",
+    "bind": "127.0.0.1 (official: apps/server/src/utils/mcp/runtime.ts server.listen(port, '127.0.0.1'))",
+    "protocol_versions": ["2025-06-18", "2025-03-26"],
+    "fallback_path": "same-origin /mcp on the main server port 3000 (official behavior)"
+  },
+  "auth": {
+    "type": "bearer",
+    "header": "Authorization: Bearer <token>",
+    "token_source": {
+      "type": "settings_json",
+      "path": "runtime/toonflow-data/settings.json",
+      "key": "settings.mcp.token",
+      "rule": "token length >= 32 (official control.ts authorizeMcp)",
+      "redaction": "never print token; evidence shows '<REDACTED>' only"
+    }
+  },
+  "enable_switch": {
+    "file": "runtime/toonflow-data/settings.json",
+    "keys": { "enabled": "settings.mcp.enabled", "token": "settings.mcp.token", "port": "settings.mcp.port (default 10588)" },
+    "note": "official UI path is Settings->MCP; server deployment can pre-provision the same settings.json inside its own data dir"
+  },
+  "runtime_info": {
+    "file_pattern": "runtime/toonflow-data/mcpRuntime<port>.json",
+    "content": "{ pid, url, token } managed by the host; read for port/token, never echo token"
+  },
+  "stdio_entry": "vendor/toonflow/build/mcp/stdio.js (built by `bun run build:mcp`; needs node>=20 or bun)",
+  "tools_expected": [
+    "getAppState",
+    "workspaceFiles",
+    "listAppOperations",
+    "appOperation",
+    "runAgent",
+    "getCanvas", "findCanvasNodes", "getCanvasNodes", "getCanvasEdges", "getNodeTools", "nodeTools",
+    "getDocument", "writeDocument", "openProject", "switchPanel", "getSettings", "updateSettings"
+  ],
+  "tools_connection_requirements": {
+    "server_side_no_ui": ["getAppState (workspace root only)", "workspaceFiles (target.directory inside data/workspaces)", "listAppOperations", "appOperation", "runAgent (needs configured model; SKIPPED this round: paid LLM)"],
+    "require_connected_page": ["canvas/node/document/panel tools (official README: 需要打开的 Toonflow 窗口或网页)"]
+  },
+  "dry_run": {
+    "default": true,
+    "never_call": ["runAgent (configured model = paid LLM)", "media generation tools", "provider submits"],
+    "allowed_real_calls": [
+      "initialize", "notifications/initialized", "tools/list",
+      "tools/call getAppState", "tools/call workspaceFiles list/mkdir/writeBinary/readBinary/remove in a temp directory",
+      "tools/call openProject + getCanvas(include nodeTypes) + addNode + findCanvasNodes + getCanvasNodes + deleteNodes on a controlled mcp-verify-* fixture project (real page connection; cleanup in finally; repair1 R2)"
+    ],
+    "verification_bounds": {
+      "per_rpc_timeout_ms": 15000,
+      "overall_timeout_ms": 180000,
+      "exit_codes": "0=pass; 1=failure (transport/HTTP/JSON-RPC/tool isError/assert); 2=usage/config; 3=canvas unavailable (no connected page) — nonzero is never a pass"
+    }
+  }
+}

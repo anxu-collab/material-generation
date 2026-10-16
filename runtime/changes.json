@@ -1,0 +1,1173 @@
+{
+  "module": "product-material-pipeline-v1",
+  "created_at": "2026-10-11",
+  "purpose": "回滚登记：本次新增的所有自有文件/服务/依赖。回退=停自有进程+删除对应条目；保留证据与用户资料。",
+  "own_files_added": [
+    "AGENTS.md",
+    ".gitignore",
+    "docs/modules/product-material-pipeline-v1/MODULE.md",
+    "docs/modules/product-material-pipeline-v1/module.yaml",
+    "docs/modules/product-material-pipeline-v1/USER_REQUIREMENTS.md",
+    "docs/modules/product-material-pipeline-v1/TASK_SPEC.md",
+    "docs/modules/product-material-pipeline-v1/IMPLEMENTATION_PLAN.md",
+    "docs/modules/product-material-pipeline-v1/ORCA_INSTALL_TASK_SPEC.yaml",
+    "docs/modules/product-material-pipeline-v1/DEPLOYMENT_REPORT.md",
+    "docs/modules/product-material-pipeline-v1/ERROR_KNOWLEDGE.md",
+    "config/deployment.json",
+    "config/mcp.json",
+    "config/vbench_capabilities.json",
+    "config/env.example",
+    "config/vbench-requirements.txt",
+    "scripts/deploy.ps1",
+    "scripts/start-toonflow.ps1",
+    "scripts/stop-toonflow.ps1",
+    "scripts/check-deployment.ps1",
+    "scripts/toonflow-loopback.ts",
+    "scripts/verify-mcp.mjs",
+    "scripts/check-vbench.py",
+    "tests/test_deployment_guards.py",
+    "runtime/changes.json",
+    "runtime/progress.json",
+    "runtime/acceptance.json"
+  ],
+  "own_files_note": "ORCA_INSTALL_TASK_SPEC.yaml(v3) 为调度合同快照（coordinator 提供）；worker 自由文件 24 个 = v3 合同 allowed_files 上限（新增 scripts/toonflow-loopback.ts）。",
+  "vendor_added": [
+    "vendor/toonflow (git clone --depth 1 --branch v2.0.5, commit 2c7fb257affb65777110fe4c6e60cd3c09187d9b)",
+    "vendor/toonflow/node_modules (bun install --frozen-lockfile, 1810 包)",
+    "vendor/toonflow/build (build:server + build:mcp + build:teams 官方产物, 含 build/agents/storyboardTeam)",
+    "vendor/vbench (git clone --depth 1, commit fd18b3d055cb0fc6f066ca90fe2c3c8cbb698490)",
+    "vendor/tools/bun-windows-x64 (Bun 1.3.14 官方 windows-x64 zip 解压)"
+  ],
+  "services_started": [
+    {
+      "name": "toonflow-server (v3 loopback wrapper)",
+      "command": "bun scripts/toonflow-loopback.ts",
+      "pid": 40644,
+      "port": 3000,
+      "bind": "127.0.0.1 only (netstat verified)",
+      "mcp_port": 10588,
+      "data_dir": "runtime/toonflow-data",
+      "stop_script": "scripts/stop-toonflow.ps1",
+      "started_at": "2026-10-11T03:44:18.7436024+08:00 (repair1 restart via hardened start-toonflow.ps1; original 25260 exited; timestamp from server-info.json machine record)"
+    }
+  ],
+  "processes_spawned": [
+    "chrome headless pid 40544 (CDP 页面连接测试用，已退出)",
+    "dummy bun pid 33372 (stop 负面测试用，harness 已清理)"
+  ],
+  "dependencies_installed": [
+    "runtime/venvs/vbench (Python 3.10.9)",
+    "torch 2.3.1+cu121 / torchvision 0.18.1+cu121 + 最小集（config/vbench-requirements.txt）",
+    "repair1 (R3): omegaconf==2.3.0 imageio==2.36.1 einops==0.8.0 mmengine==0.10.7 + small transitive wheels (full list runtime/evidence/deployment/vbench-venv-pip-freeze-repair1.txt; no detection stacks, no git deps, zero weights)"
+  ],
+  "global_changes": [],
+  "notes": "回退顺序：stop-toonflow.ps1（仅停登记 PID）→ 删 own_files_added 自有文件 → 可选删 vendor_added 与 runtime 生成树（保留用户要求保留的证据）。禁止删 F:/codex/laox_account 任何内容（本任务从未触碰）。",
+  "repair1": {
+    "task": "task_b5829526bb66 / dispatch ctx_f926863f84d9 (2026-10-11)",
+    "modified_own_files": [
+      "scripts/start-toonflow.ps1",
+      "scripts/stop-toonflow.ps1",
+      "scripts/verify-mcp.mjs",
+      "scripts/check-vbench.py",
+      "tests/test_deployment_guards.py",
+      "config/mcp.json",
+      "config/vbench_capabilities.json",
+      "config/vbench-requirements.txt",
+      "docs/modules/product-material-pipeline-v1/MODULE.md",
+      "docs/modules/product-material-pipeline-v1/module.yaml",
+      "docs/modules/product-material-pipeline-v1/TASK_SPEC.md",
+      "docs/modules/product-material-pipeline-v1/IMPLEMENTATION_PLAN.md",
+      "docs/modules/product-material-pipeline-v1/DEPLOYMENT_REPORT.md",
+      "docs/modules/product-material-pipeline-v1/ERROR_KNOWLEDGE.md",
+      "runtime/changes.json",
+      "runtime/progress.json",
+      "runtime/acceptance.json"
+    ],
+    "new_own_files": [],
+    "rollback_baseline": "runtime/evidence/deployment/repair1-baseline/ (20 allowed-file copies taken before edits; no secrets)",
+    "rollback_policy": "restore changed allowed files from repair1-baseline only; keep installed vendor/venv/team/3D and all evidence",
+    "verified_at_machine_clock": "2026-10-11T04:09:00+08:00",
+    "coordinator_feedback_delivery": "delivery_618a767f598c handled+acked (5 rows; pid-int reuse fix, strict verify-mcp, DINO/AMT matrix correction)"
+  },
+  "h3_autodl_v1": {
+    "created_at": "2026-10-11",
+    "task": "task_e39ada996597",
+    "purpose": "真实 H3 接入（只读 GET + 本地请求构造 + 守卫式提交入口）；零付费",
+    "source_files_added": [
+      "adapters/h3_autodl.py",
+      "scripts/h3-materials.py",
+      "tests/test_h3_autodl.py"
+    ],
+    "docs_modified": [
+      "AGENTS.md",
+      "config/env.example",
+      "docs/modules/product-material-pipeline-v1/MODULE.md",
+      "docs/modules/product-material-pipeline-v1/module.yaml",
+      "docs/modules/product-material-pipeline-v1/ERROR_KNOWLEDGE.md"
+    ],
+    "artifacts": [
+      "runtime/evidence/h3-autodl-v1/",
+      "runtime/h3-autodl-v1/projects/",
+      "runtime/runs/h3/template_previews/laox_lab_h3test_*",
+      "runtime/backups/h3-autodl-v1/"
+    ],
+    "rollback": "delete the 3 new source files; restore 5 docs from runtime/backups/h3-autodl-v1/backup-manifest.json byte copies; evidence/preview artifacts may be kept or deleted; never touch oldX"
+  },
+  "lightweight_weights_2026_10_11": {
+    "purpose": "User-authorized download of non-7B VBench checkpoints. Scoring not run.",
+    "excluded": [
+      "LLaVA-Video-7B-Qwen2",
+      "Qwen2.5-7B-Instruct"
+    ],
+    "location": "runtime/cache/vbench, runtime/cache/vbench2, runtime/cache/torch/hub/checkpoints",
+    "evidence": "runtime/evidence/deployment/lightweight-weights.json",
+    "rollback": "delete those cache weight files; they are gitignored under runtime/cache/"
+  },
+  "commodity_material_ai_v1": {
+    "updated_at": "2026-10-11T16:37:16.343253+08:00",
+    "new_own_files": [
+      "docs/modules/commodity-material-ai-v1/MODULE.md",
+      "docs/modules/commodity-material-ai-v1/module.yaml",
+      "scripts/commodity-materials.py",
+      "adapters/commodity_ai.py",
+      "tests/test_commodity_ai.py"
+    ],
+    "pending_own_files": [],
+    "modified_existing": [
+      "adapters/storyboard_team.py",
+      "tests/test_koc_materials.py",
+      "docs/modules/product-material-pipeline-v1/IMPLEMENTATION_PLAN.md",
+      "runtime/progress.json",
+      "runtime/changes.json",
+      "runtime/acceptance.json"
+    ],
+    "archive": "runtime/backups/commodity-material-ai-v1/historical-docs/archive-index.json",
+    "archive_distinct_documents": 14,
+    "archive_revisions": 15,
+    "rollback_baseline": "runtime/backups/commodity-material-ai-v1/implementation-baseline",
+    "active_owned_count": 45,
+    "active_owned_limit": 45,
+    "global_changes": false,
+    "external_project_changes": false,
+    "paid_h3_calls": 0,
+    "weight_downloads": 0,
+    "run_id": "run_5849cdb0a524",
+    "dispatch_id": "ctx_a09013e757e5",
+    "settled": false,
+    "repair_task": "task_6639d7fc5b36",
+    "repair_dispatch": "ctx_0b0de15110e7",
+    "review_verdict": "REPAIR",
+    "repair_attempts_used": 1,
+    "services_started_this_round": [
+      {
+        "pid": 56164,
+        "time": "2026-10-11T07:16:58.9477351Z",
+        "command": "python scripts/commodity-materials.py serve --port 3011",
+        "start_time": "2026-10-11T07:16:58.9436247Z",
+        "executable": "C:\\Python314\\python.exe",
+        "url": "http://127.0.0.1:3011",
+        "scope": "project-owned read-only review HTTP; no model inference",
+        "cwd": "F:/codex/laox_director_lab"
+      }
+    ],
+    "concurrent_new_files_preserved": [
+      "adapters/h3_minimax_official.py",
+      "config/minimax_official.json",
+      "scripts/h3-official-materials.py",
+      "tests/test_h3_minimax_official.py"
+    ],
+    "active_count_includes_case_input": true,
+    "current_classification_entry": "docs/modules/product-material-pipeline-v1/IMPLEMENTATION_PLAN.md",
+    "toonflow_cli_bridge": {
+      "status": "verified_TEST_only",
+      "evidence": "runtime/evidence/commodity-material-ai-v1/cli-bridge-live.json",
+      "claude_chain": "not_run_OAuth_expired",
+      "model_calls": 0,
+      "h3_calls": 0
+    },
+    "coordinator_checkpoint": {
+      "status": "partial",
+      "worker_dispatch": "ctx_0b0de15110e7",
+      "worker_done_received": false,
+      "checkpoint_ack": "msg_119ba76f8197",
+      "scope": "remaining same-scope repair1 findings before worker_done",
+      "ui_stage_compatibility": "runtime/evidence/commodity-material-ai-v1/ui-stage-api-compatibility.json",
+      "clef_draft_unit17": "runtime/evidence/commodity-material-ai-v1/claude-clef-prep-audit.json",
+      "final_verification": "not_run-awaiting-stable-core",
+      "active_count": 45,
+      "active_count_includes_case_input": true,
+      "historical_documents": 14,
+      "historical_versions": 15,
+      "actual_model_inferences_in_checkpoint": 0,
+      "h3_calls_this_round": 0,
+      "model_downloads_this_round": 0
+    }
+  },
+  "seedream_image_v1": {
+    "date": "2026-10-11",
+    "own_files_added": [
+      "adapters/seedream_image.py",
+      "tests/test_seedream_image.py"
+    ],
+    "runtime_state": "runtime/seedream-image-v1/ (ledger.jsonl, images/, results/, jobs-sample.json; delete only these on rollback)",
+    "evidence": "runtime/evidence/seedream-probe/ (probe.py, probe-ok.json, probe-orange-juice.jpg; 2 refused + 1 successful real call)",
+    "edited": [
+      "AGENTS.md (exception five, ceiling 52)",
+      "docs/modules/product-material-pipeline-v1/module.yaml (ceiling 52)"
+    ],
+    "credentials": "ARK_API_KEY copied once (user request) into git-ignored config/seedream.local.env; adapter reads env first then that file; value never printed or logged",
+    "paid_calls": 5,
+    "global_changes": [],
+    "dependencies_installed": [],
+    "own_files_added_untracked_secret": [
+      "config/seedream.local.env (git-ignored, secret)"
+    ],
+    "default_size": "1080x1920 (user: normal 1080p, not 2K)",
+    "real_batch": "authorization seedream-test-1: 4/4 images, 0 failures, all 1080x1920"
+  },
+  "changes": [
+    {
+      "date": "2026-10-11",
+      "actor": "zcode repair1 (task_6639d7fc5b36)",
+      "module": "commodity-material-ai-v1",
+      "modified": [
+        "adapters/commodity_ai.py",
+        "tests/test_commodity_ai.py"
+      ],
+      "added_files": [],
+      "db_migration": "reviews table gained additive columns source_payload/source_sha256; new stage_records table (CREATE IF NOT EXISTS)",
+      "rollback": "restore the two files from runtime/backups/commodity-material-ai-v1/repair1-baseline/ if requested; store rows/media/history/evidence preserved (append-only)",
+      "evidence": "runtime/evidence/commodity-material-ai-v1/zcode-repair1-report.json"
+    },
+    {
+      "date": "2026-10-11",
+      "actor": "cursor agent (user direct: laox persona convergence)",
+      "module": "laox-persona",
+      "modified": [],
+      "added_files": [
+        "cases/laox/case.json",
+        "cases/laox/refs/host_front.png"
+      ],
+      "note": "case data; host ref copied read-only from laox_account 老X淘宝.png (sha256 e99b97c8...), laox_account untouched",
+      "rollback": "delete cases/laox/"
+    },
+    {
+      "date": "2026-10-11",
+      "actor": "cursor agent (user direct: laox three-product still production)",
+      "module": "material-flow-v1",
+      "modified": [
+        "scripts/material-flow.py",
+        "adapters/seedream_image.py",
+        "cases/tianyiqing/case.json",
+        ".gitignore",
+        "cases/laox/case.json"
+      ],
+      "added_files": [
+        "config/pexels.local.env (git-ignored, user-filled key)",
+        "cases/laox-cable/",
+        "cases/laox-stand/",
+        "cases/laox-vacuum/"
+      ],
+      "note": "briefs generalized: product-specific rules moved into case.brief (tianyiqing text preserved verbatim), product_ref choices per case via product_ref_map; seedream stills saved under images/<product_id>/. Paid Seedream images: 3 masters + 45 stills + 2 repairs = 50 attempts, 49 images (1 InputTextSensitiveContentDetected). Claude: 3 Opus create + 3 Sonnet review + 1 Sonnet repair.",
+      "rollback": "restore the two scripts from git; delete cases/laox-*/ and runtime/material-flow/lx?-r1/; ledger and images are append-only and kept"
+    },
+    {
+      "date": "2026-10-11",
+      "actor": "cursor agent",
+      "module": "material-flow-v1",
+      "modified": [
+        "adapters/seedream_image.py"
+      ],
+      "note": "generated stills moved to output/<产品名>/; default Seedream writes go there; result image_path rewritten",
+      "rollback": "move output/* back under runtime/seedream-image-v1/images/<product_id>/ and restore the adapter"
+    },
+    {
+      "date": "2026-10-11",
+      "actor": "cursor agent",
+      "module": "material-flow-v1",
+      "modified": [
+        "scripts/material-flow.py"
+      ],
+      "note": "Sonnet review now returns a batch verdict (chain_links/derivatives, same-desk close-ups <=4, requirement_checks); new `gate` command runs Clef on demand (fail-closed); `jobs` refuses unless batch_verdict=pass and clef-gate.json passed for the current review.json sha256; repair uses a shots-only REPAIR_SCHEMA. lxc-r1 old review kept as review.pre-batch.json.",
+      "rollback": "restore scripts/material-flow.py from git; copy lxc-r1/review.pre-batch.json back to review.json"
+    },
+    {
+      "date": "2026-10-11",
+      "actor": "cursor agent",
+      "module": "material-flow-v1",
+      "deleted": [
+        "output stills ['lxv-110', 'lxv-111', 'lxv-109.v1']",
+        "output stills ['lxc-107', 'lxc-108', 'lxc-109', 'lxc-110']",
+        "output stills ['lxs-108', 'lxs-109', 'lxs-110', 'lxs-111']"
+      ],
+      "note": "User allowed deleting duplicate stills. Removed the round-1 product close-ups already retired as duplicates, plus the deformed lxv-109.v1. Effective images and round-2 images were kept."
+    },
+    {
+      "utc": "2026-10-12",
+      "phase": "llm-provider-ark-v2",
+      "what": "Claude(opus/sonnet) -> 方舟 Managed Agents 迁移",
+      "files": [
+        "agents/ark_profiles.py (new, 5 role system personas)",
+        "scripts/material-flow.py (ark_agent_json -> Managed Agents session+SSE; ensure_agent/ensure_environment; cmd_sync_agents)",
+        "config/doubao_text.json (bot_id -> agent_id; +environment_id)",
+        "tests/test_ark_agent.py (11 cases, mock client injection)"
+      ],
+      "api_calls": {
+        "create_agents": 5,
+        "create_environment": 1,
+        "inference_billed": 0,
+        "authorization": "2026-10-12 用户原话: api可以创建，你字节创建不就可以了"
+      },
+      "status": "agents_created; provider 仍 claude, 待 enrich 3 镜真实验证后切换"
+    },
+    {
+      "utc": "2026-10-12",
+      "phase": "llm-provider-ark-v3-industry-skills",
+      "what": "行业 Skill 体系: 保健品行业内容方法论 (危害/产品对比/方法/效用)",
+      "files": [
+        "docs/modules/product-material-pipeline-v1/ark-skills/industry-skills-design.md (new)",
+        "agents/skills/industry-healthcare/SKILL.md (new)",
+        "scripts/material-flow.py (ensure_skill; ensure_agent skills 绑定/更新; sync-agents --industry)",
+        "config/doubao_text.json (industry + skills 结构)",
+        "tests/test_ark_agent.py (15 cases)"
+      ],
+      "status": "code_complete_pending_cloud_sync"
+    },
+    {
+      "utc": "2026-10-12",
+      "phase": "llm-provider-ark-v3-decompliance",
+      "what": "删除 SKILL.md 投放级合规红线 (医疗断言/对比数据/贬损竞品等), 改效果导向; 保留素材生产硬规范与创作标注",
+      "files": [
+        "agents/skills/industry-healthcare/SKILL.md",
+        "docs/.../ark-skills/industry-skills-design.md"
+      ],
+      "reason": "用户指示: 本管线只生产视频素材不产成片, 合规限制会限制素材效果"
+    },
+    {
+      "utc": "2026-10-12",
+      "phase": "llm-provider-ark-v3-decompliance-prompt",
+      "what": "删除 material-flow prompt 模板中 3 处投放合规类限制 (功效/对比数据/治疗结果/夸大承诺)",
+      "files": [
+        "scripts/material-flow.py (CONSUMER_BRIEF/REVIEW_BRIEF/PACE_BRIEF, CONSUMER_CHECKS schema+校验)"
+      ],
+      "note": "保留素材生产硬规范与工程验收规则 (AGENTS.md 像素验收/创作假设标注)"
+    },
+    {
+      "utc": "2026-10-12",
+      "phase": "llm-provider-ark-v3-cloud-sync",
+      "what": "云端同步: 上传 industry-healthcare skill 并绑定 creator/reviewer (agent v2); 修正更新端点为 POST",
+      "files": [
+        "scripts/material-flow.py (PUT->POST 更新端点)",
+        "config/doubao_text.json (skill_id 写回)"
+      ],
+      "api_calls": {
+        "create_skill": 1,
+        "update_agent": 2,
+        "inference_billed": 0
+      }
+    },
+    {
+      "utc": "2026-10-12",
+      "phase": "llm-provider-ark-v3-enrich-verify",
+      "what": "provider 切换 ark_agent; enrich 3 镜真实调用通过 (session+SSE, 195.9s, 字段完整)",
+      "files": [
+        "config/doubao_text.json (provider=ark_agent)"
+      ],
+      "api_calls": {
+        "inference": 1,
+        "inference_billed": "yes"
+      }
+    },
+    {
+      "utc": "2026-10-12",
+      "phase": "llm-provider-ark-v3-industry-home",
+      "what": "新增日常家居行业 Skill (industry-home), creator/reviewer 绑定双行业 (healthcare+home)",
+      "files": [
+        "agents/skills/industry-home/SKILL.md (new)",
+        "scripts/material-flow.py (多行业绑定)",
+        "config/doubao_text.json (skills.home)"
+      ],
+      "api_calls": {
+        "create_skill": 1,
+        "update_agent": 2,
+        "inference_billed": 0
+      }
+    },
+    {
+      "utc": "2026-10-12",
+      "phase": "llm-provider-ark-v3-create-verify",
+      "what": "creator agent 3 镜真实验证通过; 修复输出结构(字段契约)与超时诊断; 新增 session 产物文件通道",
+      "files": [
+        "scripts/material-flow.py (CREATE_BRIEF 16条契约/严格N; _ArkClient list_session_files/download_output; ark_agent_json 产物优先)"
+      ],
+      "api_calls": {
+        "inference": 5,
+        "inference_billed": 5
+      }
+    },
+    {
+      "utc": "2026-10-12",
+      "phase": "llm-provider-ark-v3-review-verify",
+      "what": "reviewer agent 3 镜验证通过 (needs_rework 如实); summarize 走方舟 chat 裸调; bridge 跳过(非 review 依赖); jsonschema 装入 vendor/python",
+      "files": [
+        "scripts/material-flow.py (cmd_bridge PYTHONPATH vendor)",
+        "vendor/python (jsonschema 4.26.0, 非全局)"
+      ],
+      "api_calls": {
+        "inference": 2,
+        "inference_billed": 2
+      }
+    },
+    {
+      "utc": "2026-10-12",
+      "phase": "material-verification-spec-v1",
+      "what": "素材验证规范定稿 (两层验证/结构契约/六项检查/判定规则/去合规化), AGENTS.md 引用",
+      "files": [
+        "docs/modules/product-material-pipeline-v1/material-verification-spec.md (new)",
+        "AGENTS.md (规范引用)"
+      ]
+    },
+    {
+      "utc": "2026-10-12",
+      "phase": "industry-healthcare-video-direction-v2",
+      "what": "保健品 SKILL 新增 §0 视频生成方向 (状态痛点+具体功效必点, 核心效用管家纳豆); 重传 skill-20261012074220-ze310 v1; creator/reviewer 重绑 (home 保留); config skills.healthcare 更新",
+      "files": [
+        "agents/skills/industry-healthcare/SKILL.md",
+        "config/doubao_text.json"
+      ],
+      "api_calls": {
+        "skill_create": 1,
+        "agent_update": 2,
+        "inference": 0,
+        "inference_billed": 0
+      }
+    },
+    {
+      "utc": "2026-10-12",
+      "phase": "industry-healthcare-generalize-v3",
+      "what": "保健品 SKILL 通用化 (规则层无产品名, 核心效用逐字来自商品资料, 管家纳豆仅案例示范); 天益清 case.json 补 core_utility+functions (supported_function 校验事实来源); 重传 skill-20261012074834-hoh5r, creator/reviewer 重绑",
+      "files": [
+        "agents/skills/industry-healthcare/SKILL.md",
+        "cases/tianyiqing/case.json",
+        "config/doubao_text.json"
+      ],
+      "api_calls": {
+        "skill_create": 1,
+        "agent_update": 2,
+        "inference": 0,
+        "inference_billed": 0
+      }
+    },
+    {
+      "utc": "2026-10-12",
+      "phase": "clef-industry-sync",
+      "what": "clef 门禁同步行业 skill: 通用5问保留, 新增 INDUSTRY_CLEF_QUESTIONS (healthcare/home), _clef_state 要求文本按行业注入; 6 个 case.json 加 industry; ClefIndustryTest 3 用例",
+      "files": [
+        "scripts/material-flow.py",
+        "cases/tianyiqing/case.json",
+        "cases/laox-cable/case.json",
+        "cases/laox-vacuum/case.json",
+        "cases/laox-stand/case.json",
+        "cases/laox/case.json",
+        "tests/test_ark_agent.py"
+      ],
+      "api_calls": {
+        "inference": 0,
+        "inference_billed": 0
+      }
+    },
+    {
+      "utc": "2026-10-12",
+      "phase": "tyq-v3-images",
+      "what": "create(reviewer修复后) -> summarize -> review(needs_rework) -> fast-pass 生图 3 张; 修复 ark agent JSON 解析(内嵌引号/裸换行); review 产物文件通道手动取回; seedream 3 张输出 output/天益清/",
+      "files": [
+        "scripts/material-flow.py (_parse_agent_json lenient)",
+        "runtime/material-flow/tyq-v3/*"
+      ],
+      "api_calls": {
+        "inference": 3,
+        "inference_billed": 3,
+        "images": 3,
+        "images_billed": 3
+      }
+    },
+    {
+      "utc": "2026-10-12",
+      "phase": "tyq-v4-silhouette-images",
+      "what": "状态痛点侧影化 (skill 重传+重绑, case product_rules 加侧影规则); create/review/生图 3 张; ark_agent_json 产物文件轮询修复",
+      "files": [
+        "agents/skills/industry-healthcare/SKILL.md",
+        "cases/tianyiqing/case.json",
+        "scripts/material-flow.py",
+        "runtime/material-flow/tyq-v4/*"
+      ],
+      "api_calls": {
+        "inference": 2,
+        "inference_billed": 2,
+        "images": 3,
+        "images_billed": 3
+      }
+    },
+    {
+      "utc": "2026-10-12",
+      "phase": "healthcare-skill-close",
+      "what": "保健品环节收口: SKILL.md 同步(侧影/功效对照/规范引用), 重传云端并重绑 creator/reviewer",
+      "files": [
+        "agents/skills/industry-healthcare/SKILL.md",
+        "config/doubao_text.json"
+      ]
+    },
+    {
+      "utc": "2026-10-12",
+      "phase": "home-skill-shape",
+      "what": "塑造家居行业: SKILL.md 补 §0 必点方向/clef 检查/规范引用, 物件化无真人, 重传云端并重绑 creator/reviewer",
+      "files": [
+        "agents/skills/industry-home/SKILL.md",
+        "config/doubao_text.json"
+      ]
+    },
+    {
+      "utc": "2026-10-12",
+      "phase": "home-skill-shape-v2",
+      "what": "按用户裁定改家居 skill: 15张内5/4/4/2配额+发散性对齐保健品+clef配套拦截; 修 healthcare clef 文案侧影化; 重传 home skill 并重绑",
+      "files": [
+        "agents/skills/industry-home/SKILL.md",
+        "scripts/material-flow.py",
+        "config/doubao_text.json"
+      ]
+    }
+  ],
+  "material_flow_v1": {
+    "date": "2026-10-11",
+    "own_files_added": [
+      "scripts/material-flow.py"
+    ],
+    "case_data_added": [
+      "cases/tianyiqing/case.json",
+      "cases/tianyiqing/jobs-probe.json",
+      "cases/tianyiqing/refs/ (product_main/box/bottle.jpg, scene_01-03/02-04.jpg; resized copies of F:/codex/发布代码 assets, read-only source)",
+      "cases/tianyiqing/refs/host_identity_sheet.jpg, host_front.png (approved host, copied from 发布代码/素材图片/天益清)"
+    ],
+    "edited": [
+      "adapters/seedream_image.py (reference images under cases/, data-URL, hash fingerprint)",
+      "tests/test_seedream_image.py (+2 tests)",
+      "AGENTS.md (ceiling 53)",
+      "module.yaml (ceiling 53)"
+    ],
+    "runtime_state": [
+      "runtime/material-flow/tyq-r1/",
+      "runtime/toonflow-data/workspaces/tianyiqing-tyq-r1/",
+      "runtime/seedream-image-v1/ (images/results/ledger)"
+    ],
+    "paid_calls": {
+      "claude_opus_5_5": "1 call, 602.7 s, 1.11 USD reported",
+      "claude_sonnet_5_5": "1 id check + 1 review (0.69 USD) + 1 repair",
+      "seedream": "43 images under authorization tianyiqing-1 (cap 60)"
+    },
+    "external_reads": [
+      "F:/codex/发布代码 (user-named; read-only: product png, approved copy, storyboard, .env variable NAMES and URL hosts only, no secret values)"
+    ],
+    "global_changes": [],
+    "dependencies_installed": [],
+    "credentials_added": [
+      "config/autodl.local.env (git-ignored; AUTODL_ART_BASE_URL=https://autodl.art + AUTODL_ART_TOKEN copied once from F:/codex/发布代码/.env H3_API_KEY; laox_account not read)"
+    ],
+    "revisions": [
+      {
+        "utc": "2026-10-11",
+        "change": "shot schema: real_product_craft/concept_association/effects_packaging/visual_metaphor/edit_handles; duration<=10s int; video-jobs (approved stills only, <=10 per batch, local z0902 prepare, 0 network); background extras allowed; remaining 28 r2 stills cancelled",
+        "files": [
+          "scripts/material-flow.py",
+          "runtime/material-flow/tyq-r2/user-approval.TEMPLATE.json"
+        ]
+      },
+      {
+        "utc": "2026-10-11",
+        "change": "image budget policy (generated<=20, effective<=15, full_person<=3, limbs_only<=3) enforced by policy/jobs/video-jobs; person_exposure field; enrich command backfilled capability fields for 15 effective shots (2 Opus calls, no images); video-jobs now multi-run, effective-set only, <=10 per batch, <=10 s each; batch tyq-v1 prepared locally (10 requests, 53 s total, 0 network, 0 paid)",
+        "files": [
+          "scripts/material-flow.py",
+          "cases/tianyiqing/effective-images.json",
+          "runtime/material-flow/video-batches/tyq-v1/"
+        ]
+      },
+      {
+        "utc": "2026-10-11",
+        "change": "z0902 live validation, batch tyq-v2: 10 paid z0902 submissions (53 s requested, price waived by user), all 10 reached SUCCESS and were downloaded; 1 blank (tyq-026); adapter: cost_waiver, poll_z0902, download_z0902; guards flipped open for the run and restored to closed; commands pace/video-submit/video-poll added; query/download endpoint read from laox_h3.py poll()/download() under user permission",
+        "files": [
+          "adapters/h3_autodl.py",
+          "scripts/material-flow.py",
+          "runtime/material-flow/video-batches/tyq-v2/"
+        ]
+      },
+      {
+        "utc": "2026-10-11",
+        "change": "tyq-v2 user verdict: tyq-026 (blank), tyq-203 (too dark), tyq-217 (chewing/mouth deformation) failed; added blank/dark content check to download_z0902 and re-checked all 10 runs; record-failure command + runtime/lessons/failure-ledger.jsonl; usage_rules in case.json; lessons added to create/pace briefs; Clef delivery pending (service down, decision-only protocol)",
+        "files": [
+          "adapters/h3_autodl.py",
+          "scripts/material-flow.py",
+          "cases/tianyiqing/case.json",
+          "runtime/lessons/failure-ledger.jsonl"
+        ]
+      },
+      {
+        "utc": "2026-10-11",
+        "change": "batch tyq-v3: ingredient + association-chain clips (026 redo, 027, 025, 038, 206), 5 paid z0902 submissions (24 s requested), all SUCCESS and downloaded; effective set swap tyq-015 -> tyq-025 (tiger nut); approval file may carry its own consent text",
+        "files": [
+          "runtime/material-flow/video-batches/tyq-v3/",
+          "cases/tianyiqing/effective-images.json",
+          "scripts/material-flow.py"
+        ]
+      },
+      {
+        "utc": "2026-10-11",
+        "change": "unified material library material-library/<product>/ (index.json, product.json, manifest.json, videos/ with per-clip sidecar json, posters/, _rejected/); video-poll --download publishes automatically as pending_review; video-publish and video-status commands; 15 tianyiqing clips imported (10 approved, 2 approved_with_caveats, 3 rejected per user verdict 20:21)",
+        "files": [
+          "scripts/material-flow.py",
+          "material-library/"
+        ]
+      },
+      {
+        "utc": "2026-10-11",
+        "change": "gap fill batch tyq-v4 (office, tablet with warm water, dedicated earthworm protein): 1 new Seedream still tyq-301 under a recorded user exception (attempts 55/60 on the batch authorization), 3 paid z0902 videos (16 s requested) all SUCCESS, published as pending_review; effective set: retired tyq-203/217/003, added tyq-013/tyq-301 (14 effective); create --focus, pace per-video direction, generation_exceptions in effective-images.json; poster path now taken from the still result record",
+        "files": [
+          "scripts/material-flow.py",
+          "cases/tianyiqing/effective-images.json",
+          "material-library/tianyiqing/",
+          "runtime/material-flow/tyq-r3/",
+          "runtime/material-flow/video-batches/tyq-v4/"
+        ]
+      },
+      {
+        "utc": "2026-10-11",
+        "change": "library v3: pending/, approved/ and rejected/ are separate folders; a status change moves the mp4, poster and sidecar together; auto-editor reads approved/ only. User reviewed tyq-013-v1, tyq-029-v2, tyq-301-v1 (21:05) and they are approved. tyq-026-v1 file is absent (deleted earlier), record kept as rejected.",
+        "files": [
+          "scripts/material-flow.py",
+          "material-library/"
+        ]
+      },
+      {
+        "utc": "2026-10-12",
+        "change": "LLM provider 抽象：material-flow 全部结构化 JSON 调用改走 llm_json(role,...) 分发（provider=claude 保持原 headless Claude CLI；provider=ark_bot 走方舟 Bot Agent /api/v3/bots/chat/completions，key 复用 ARK_API_KEY）。7 个调用点替换为 creator/reviewer/motion/pace/enricher 角色。enrich 支持 --batch-size（默认 3）拆批、逐批落盘。config/doubao_text.json 扩展 agents 配置（bot_id 占位，provider 默认仍 claude 未切换）。新增 bot 人设模板 docs/.../ark-bots/ark-bot-profiles.md 与零网络单元测试 tests/test_ark_agent.py（8 用例全绿）。未做任何付费/真实 Ark 调用（bot 未创建）。",
+        "files": [
+          "scripts/material-flow.py",
+          "config/doubao_text.json",
+          "tests/test_ark_agent.py",
+          "docs/modules/product-material-pipeline-v1/ark-bots/ark-bot-profiles.md"
+        ]
+      },
+      {
+        "utc": "2026-10-16",
+        "change": "Removed scratch and superseded intermediates: runtime/tmp, pytest cache, Toonflow logs, MiniMax repair unit-tmp payloads, home-image skill unpack copies, and material-flow call/pre-recreate dumps. progress.json now keeps only the paused stand batch. Output stills, material library, and the pause evidence stay.",
+        "files": [
+          "runtime/progress.json",
+          "README.md",
+          "docs/modules/product-material-pipeline-v1/IMPLEMENTATION_PLAN.md"
+        ]
+      },
+      {
+        "utc": "2026-10-16",
+        "change": "Prepared a private GitHub copy of the current lab. Credentials, vendor, caches, evidence, backups, unit-test authorizations, and duplicate runtime videos stay local.",
+        "files": [
+          ".gitignore",
+          "README.md"
+        ]
+      },
+      {
+        "utc": "2026-10-16",
+        "change": "Public name is 素材生成. Removed generated stills, reference images, and reviewed clips from the Git tree; those files stay on disk and are now ignored.",
+        "files": [
+          ".gitignore",
+          "README.md"
+        ]
+      }
+    ]
+  },
+  "consumer_pain_visual_v1": {
+    "updated_at": "2026-10-11T23:04:57.873465+08:00",
+    "policy": "consumer-pain-visual/v1",
+    "status": "partial",
+    "implementation": "rules_and_workflow_guards_written",
+    "static_verification": "verified",
+    "runtime_verification": "not_run_user_prohibited",
+    "evidence": "runtime/evidence/consumer-pain-visual-v1/static-review.json",
+    "model_calls": 0,
+    "network_calls": 0,
+    "paid_generations": 0,
+    "files_modified": [
+      "AGENTS.md",
+      "scripts/material-flow.py",
+      "docs/modules/product-material-pipeline-v1/MODULE.md",
+      "docs/modules/product-material-pipeline-v1/module.yaml",
+      "docs/modules/product-material-pipeline-v1/IMPLEMENTATION_PLAN.md",
+      "runtime/progress.json",
+      "runtime/changes.json",
+      "runtime/acceptance.json"
+    ],
+    "production_files_added": 0,
+    "baseline": "runtime/evidence/consumer-pain-visual-v1/baseline.json",
+    "rollback": "Selectively revert this supplement using baseline comparison; never blindly copy the whole script over parallel recreate-model changes or later edits; preserve all media and evidence.",
+    "parallel_changes_preserved": [
+      "recreate args.model/default REVIEWER_MODEL observed during work; ownership not assumed"
+    ]
+  },
+  "project_organization_20261013": {
+    "recorded_at": "2026-10-13T15:50:07.209832+08:00",
+    "status": "verified",
+    "new_owned_files": [
+      "README.md"
+    ],
+    "modified_files": [
+      ".gitignore",
+      "docs/modules/product-material-pipeline-v1/IMPLEMENTATION_PLAN.md",
+      "docs/modules/product-material-pipeline-v1/MODULE.md",
+      "docs/modules/commodity-material-ai-v1/MODULE.md",
+      "material-library/README.md",
+      "runtime/progress.json",
+      "runtime/changes.json",
+      "runtime/acceptance.json"
+    ],
+    "archived_documents": [
+      {
+        "original_path": "docs/modules/product-material-pipeline-v1/ark-bots/ark-bot-profiles.md",
+        "archive_path": "runtime/backups/project-organization-20261013/archived-docs/ark-bot-profiles.md",
+        "sha256": "2b9043e1a907694365deeb6ea5df71456d820622c6132a5c66100b8b3cb217ae",
+        "reason": "Superseded by ark_agent Managed Agents and current local role/industry definitions; retained as historical design, not execution instructions."
+      },
+      {
+        "original_path": "docs/modules/product-material-pipeline-v1/ark-skills/industry-skills-design.md",
+        "archive_path": "runtime/backups/project-organization-20261013/archived-docs/industry-skills-design.md",
+        "sha256": "3d231a98fd3150dc03f20e5d9f9595b7074b392cd8216ce1a50f0154b3b3e7c5",
+        "reason": "Superseded by ark_agent Managed Agents and current local role/industry definitions; retained as historical design, not execution instructions."
+      }
+    ],
+    "baseline": "runtime/evidence/project-organization-20261013/baseline.json",
+    "report": "runtime/evidence/project-organization-20261013/report.md",
+    "rollback": "Restore only the listed documentation and record fields from original snapshots after checking for subsequent edits. Move the two archived documents back to their exact original paths. Remove README.md only if it still matches this change. Preserve media, credentials, caches and all other files.",
+    "source_code_changes": false,
+    "media_changes": false,
+    "models_loaded": false,
+    "network_calls": 0,
+    "static_verification": "verified",
+    "verified_at": "2026-10-13T15:51:26.784557+08:00"
+  },
+  "project_directory_organization_20261013": {
+    "status": "completed",
+    "date": "2026-10-13",
+    "files": [
+      "README.md",
+      "docs/modules/product-material-pipeline-v1/IMPLEMENTATION_PLAN.md",
+      "runtime/progress.json",
+      "runtime/changes.json",
+      "runtime/acceptance.json"
+    ],
+    "moved": [
+      {
+        "from": "docs/modules/product-material-pipeline-v1/ark-bots/",
+        "sha256": "empty-directory",
+        "to": "runtime/backups/project-directory-organization-20261013/archived/empty-directories/docs/modules/product-material-pipeline-v1/ark-bots/"
+      },
+      {
+        "from": "docs/modules/product-material-pipeline-v1/ark-skills/",
+        "sha256": "empty-directory",
+        "to": "runtime/backups/project-directory-organization-20261013/archived/empty-directories/docs/modules/product-material-pipeline-v1/ark-skills/"
+      },
+      {
+        "from": "elsewhere/runtime/commodity-material-ai-v1/store.sqlite3",
+        "sha256": "fecf1b1cc8f6bfe7dc5c30dc802ce2573499ad109135ced137e873c03ddf2f03",
+        "to": "runtime/backups/project-directory-organization-20261013/archived/elsewhere/runtime/commodity-material-ai-v1/store.sqlite3"
+      },
+      {
+        "from": "runtime/elsewhere/runtime/commodity-material-ai-v1/store.sqlite3",
+        "sha256": "fecf1b1cc8f6bfe7dc5c30dc802ce2573499ad109135ced137e873c03ddf2f03",
+        "to": "runtime/backups/project-directory-organization-20261013/archived/runtime/elsewhere/runtime/commodity-material-ai-v1/store.sqlite3"
+      }
+    ],
+    "references": "No active code/document references found for either former database location; adapters/commodity_ai.py selects runtime/commodity-material-ai-v1/store.sqlite3.",
+    "backups": "runtime/backups/project-directory-organization-20261013/original/"
+  },
+  "material_catalog_scheduler_v1": {
+    "updated_at": "2026-10-14T14:55:36.412159+08:00",
+    "status": "partial",
+    "implementation": "local catalog schema, queue and CLI implemented; no live multimodal transport",
+    "new_source_files": [
+      "schemas/material-catalog-v1.schema.json",
+      "adapters/material_catalog.py",
+      "adapters/material_scheduler.py",
+      "tests/test_material_catalog_scheduler.py"
+    ],
+    "targeted_tests": {
+      "catalog_queue": 29,
+      "existing_role_dispatch": 3,
+      "status": "verified"
+    },
+    "real_media_decode": {
+      "clip_id": "tyq-027-v1",
+      "fps": 24,
+      "frames": 6,
+      "status": "verified_decode_only"
+    },
+    "real_semantic_analysis": "not_run_capability_unverified",
+    "production_catalog_backfill": "not_run",
+    "model_calls": 0,
+    "network_calls": 0,
+    "evidence": "runtime/evidence/material-catalog-scheduler-v1/report.md",
+    "independent_review": {
+      "scope": "cancel, lease, authorization, publication recovery",
+      "findings": 1,
+      "important_fixed": 1,
+      "regression_log": "runtime/evidence/material-catalog-scheduler-v1/tests/12-cancel-fix.txt",
+      "final_verdict": "PASS",
+      "scope_note": "Read-only confirmation of original cancellation/publication P1 fix; no new findings"
+    }
+  },
+  "project_progress_20261014": {
+    "updated_at": "2026-10-14T15:27:13.464609+08:00",
+    "status": "verified",
+    "scope": "documentation_reconciliation_only",
+    "report": "runtime/evidence/project-progress-20261014/report.md",
+    "production_status": "partial",
+    "source_hashes_match_tested_version": 6,
+    "runtime_tests_this_organization": 0,
+    "model_calls": 0,
+    "service_actions": 0,
+    "history_preserved": true,
+    "previous_test_results": {
+      "catalog_queue": 29,
+      "role_dispatch": 3,
+      "rerun": false
+    },
+    "pending_requests": {
+      "real_model_analysis": {
+        "user_requested": true,
+        "status": "not_run",
+        "prerequisite": "verified multimodal transport, bounded call and actual-output review"
+      },
+      "wechat_pat_trigger": {
+        "user_requested": true,
+        "status": "not_run",
+        "condition": "real model analysis passes",
+        "missing": "robot project path or name",
+        "clarification": "WeChat pat/pat notification trigger, not filming settings"
+      }
+    },
+    "backup_manifest": "runtime/evidence/project-progress-20261014/baseline.json",
+    "modified_files": [
+      "README.md",
+      "docs/modules/product-material-pipeline-v1/IMPLEMENTATION_PLAN.md",
+      "runtime/progress.json",
+      "runtime/changes.json",
+      "runtime/acceptance.json"
+    ],
+    "new_business_source_files": [],
+    "superseded_priority_by": "daily_goods_skill_resume_20261014"
+  },
+  "daily_goods_skill_resume_20261014": {
+    "updated_at": "2026-10-14T17:18:24.059198+08:00",
+    "status": "partial",
+    "current_focus": "daily household goods skill design and consolidation",
+    "skill_path": "agents/skills/industry-home/SKILL.md",
+    "historical_status": "2026-10-12 shaped v2",
+    "observed_issues": [
+      "duplicate section 0",
+      "scope centered on storage, cable organization, fixing and cleaning tools"
+    ],
+    "skill_edited_this_turn": false,
+    "cloud_synced_this_turn": false,
+    "robot_action": "leave unchanged; no start, stop or pat configuration",
+    "prior_real_analysis_request": "not_run; retained but not current priority"
+  },
+  "wx_channels_download_20261014": {
+    "status": "verified",
+    "scope": "download tool deployment only",
+    "updated_at": "2026-10-14T19:51:50.3392758+08:00",
+    "version": "v260907",
+    "evidence": "runtime/evidence/wx-channels-download-20261014/deployment.json",
+    "added": "vendor/tools/wx_channels_download/",
+    "authorization": "User authorized CA and temporary proxy",
+    "global_changes": [
+      "unique public CA imported to CurrentUser/Root",
+      "HKCU ProxyEnable and ProxyServer temporarily configured; previous values stored locally"
+    ],
+    "next": "User opens PC WeChat author page and downloads selected videos",
+    "not_run": [
+      "real video download",
+      "stop-and-restore runtime validation blocked by policy"
+    ],
+    "rollback": "Project stop command targets only the recorded matching process and restores saved proxy when still owned. Certificate retained; removal must target only the recorded thumbprint. Do not delete downloads."
+  },
+  "res_downloader_20261014": {
+    "summary": "resd-mini local build deployed; captured author videos; one video downloaded and fully decoded; proxy close/reopen verified",
+    "updated_at": "2026-10-14T20:24:54.3073996+08:00",
+    "download": "vendor/tools/res-downloader/Downloads/别只做表面护理真正的_20261014202319.mp4",
+    "status": "verified",
+    "evidence": "vendor/tools/res-downloader/evidence/deployment.json"
+  },
+  "generic_agent_skills_v2": {
+    "updated_at": "2026-10-15T07:29:37.317967+00:00",
+    "status": "verified",
+    "scope": "generic agent/skill configuration refactor only",
+    "evidence": "runtime/evidence/generic-agent-skills-v2-20261015/report.md",
+    "offline_tests": 28,
+    "target_model_behavior": "not_run",
+    "paid_generation_calls": 0,
+    "cloud_skill_versions": {
+      "healthcare": "2",
+      "home": "2",
+      "common": "1"
+    },
+    "cloud_agent_versions": {
+      "creator": 10,
+      "reviewer": 10,
+      "motion": 2,
+      "pace": 2,
+      "enricher": 2
+    },
+    "added": [
+      "agents/skills/material-production/SKILL.md"
+    ],
+    "rollback_local": "runtime/evidence/generic-agent-skills-v2-20261015/local-before",
+    "rollback_cloud": "restore system/skills from cloud-before/agents.json using latest version; retain old Skill v1; never blanket delete"
+  },
+  "home_stand_creation_20261015": {
+    "updated_at": "2026-10-15T08:45:29.188328+00:00",
+    "status": "partial",
+    "text_draft": "verified",
+    "scope": "home stand first-round text creation and persona configuration",
+    "home_skill_version": "3",
+    "common_skill_version": "1",
+    "healthcare_skill_version": "2",
+    "cloud_agent_versions": {
+      "creator": 11,
+      "reviewer": 11,
+      "motion": 3,
+      "pace": 3,
+      "enricher": 3
+    },
+    "model_unchanged": true,
+    "text_requests": 4,
+    "media_generation_calls": 0,
+    "no_duplicate_submission": true,
+    "creator_status": "completed_recovered",
+    "summary_status": "completed_with_scope_overreach_not_adopted",
+    "review_status": "cloud_pass_rejected_by_main",
+    "revision_status": "completed_contract_rejected_then_explicit_main_edit",
+    "final_cloud_review": "not_run_on_revised_draft",
+    "pixel_review": "not_run",
+    "production_ready": false,
+    "shots": 6,
+    "planned_duration_sec": 28,
+    "transport_tests_passed": 31,
+    "case": "runtime/evidence/home-stand-creation-20261015/case.json",
+    "draft": "runtime/evidence/home-stand-creation-20261015/桌面支架_首轮分镜.md",
+    "structured_draft": "runtime/evidence/home-stand-creation-20261015/storyboard-reviewed.json",
+    "evidence": "runtime/evidence/home-stand-creation-20261015/report.md",
+    "remaining": [
+      "Fresh plan review of selected final draft before production",
+      "Actual image generation and pixel review not performed",
+      "Persistent automatic recovery of interrupted cloud streams not implemented"
+    ],
+    "changed_source_files": [
+      "agents/skills/industry-home/SKILL.md",
+      "config/doubao_text.json",
+      "scripts/material-flow.py",
+      "tests/test_ark_agent.py"
+    ],
+    "rollback": "runtime/evidence/home-stand-creation-20261015/before and before-close; cloud-before/agents.json",
+    "new_production_source_files": 0
+  },
+  "reviewer_skill_regression_20261015": {
+    "updated_at": "2026-10-15T09:26:20.995346+00:00",
+    "status": "partial",
+    "skill_deployment": "verified",
+    "mechanical_gate": "verified",
+    "semantic_reliability": "partial",
+    "common_version": "4",
+    "home_version": "6",
+    "healthcare_version": "2",
+    "agent_versions": {
+      "creator": 14,
+      "reviewer": 14,
+      "motion": 6,
+      "pace": 6,
+      "enricher": 6
+    },
+    "systems_and_models_unchanged": true,
+    "actual_review_agent_versions": [
+      12,
+      13
+    ],
+    "latest_binding_inference": "not_run_v14_machine_contract_addition",
+    "text_requests": 4,
+    "current_cloud_verdict": "pass",
+    "current_contract": "rejected_missing_reference_ordinals",
+    "production_ready": false,
+    "storyboard_unchanged": true,
+    "no_manual_cloud_verdict_override": true,
+    "tests_passed": 38,
+    "media_generation_calls": 0,
+    "evidence": "runtime/evidence/reviewer-skill-regression-20261015/report.md",
+    "result": "runtime/evidence/reviewer-skill-regression-20261015/复审结果.md",
+    "remaining": [
+      "Cloud still misses some first-frame conflicts and exceeds edit boundaries",
+      "Current reviewer output removed required image ordinals and was rejected",
+      "Latest binding metadata addition was not followed by another model request",
+      "No actual image/pixel verification"
+    ],
+    "changed_source_files": [
+      "agents/skills/material-production/SKILL.md",
+      "agents/skills/industry-home/SKILL.md",
+      "config/doubao_text.json",
+      "scripts/material-flow.py",
+      "tests/test_ark_agent.py"
+    ],
+    "new_production_source_files": 0,
+    "rollback": "runtime/evidence/reviewer-skill-regression-20261015/before + cloud-before/agents.json; apply targeted diff only"
+  },
+  "home_cloud_closure_20261015": {
+    "status": "verified",
+    "scope": "cloud_text_creation_and_review",
+    "updated_at": "2026-10-15T11:32:28.219112+00:00",
+    "common_version": "7",
+    "home_version": "7",
+    "agent_versions": {
+      "creator": 17,
+      "reviewer": 17,
+      "motion": 9,
+      "pace": 9,
+      "enricher": 9
+    },
+    "final_review_session": "sesn-20261015112012-094q5",
+    "cloud_review": "pass",
+    "formal_plan_gate": "verified",
+    "regression": "needs_rework_correctly_returned_to_creator",
+    "text_requests": 9,
+    "manual_storyboard_edits": 0,
+    "manual_verdict_overrides": 0,
+    "media_generation_calls": 0,
+    "pixel_review": "not_run",
+    "Clef": "not_run",
+    "production_ready": false,
+    "tests_passed": 39,
+    "run": "runtime/material-flow/laox-stand-cloud-closed-20261015",
+    "storyboard": "runtime/evidence/home-cloud-closure-20261015/桌面支架_云端修正版.md",
+    "evidence": "runtime/evidence/home-cloud-closure-20261015/report.md"
+  },
+  "home_image_closure_20261015": {
+    "status": "blocked",
+    "updated_utc": "2026-10-15T14:45:17.745717+00:00",
+    "source_modified": [
+      "scripts/material-flow.py",
+      "agents/ark_profiles.py",
+      "agents/skills/material-production/SKILL.md",
+      "docs/modules/product-material-pipeline-v1/material-verification-spec.md",
+      "tests/test_ark_agent.py",
+      "docs/modules/product-material-pipeline-v1/MODULE.md",
+      "docs/modules/product-material-pipeline-v1/IMPLEMENTATION_PLAN.md"
+    ],
+    "scope": [
+      "real image transport with exact encoded hashes",
+      "reviewer minimal material-mode scope and common pixel modes",
+      "complete per-question Clef source projections and bounded project60s option; original7questions0.5all unchanged",
+      "old reviewer edit scope corrected"
+    ],
+    "cloud": {
+      "common_skill": 8,
+      "home_skill": 7,
+      "creator_reviewer": 18,
+      "motion_pace_enricher": 10,
+      "readback": "runtime/evidence/home-image-closure-20261015/cloud-after"
+    },
+    "evidence_runners": [
+      "pixel_round.py",
+      "image_audit.py",
+      "autodl_round.py",
+      "bind_plan.py",
+      "continue_when_reviewed.py",
+      "test_entry_guards.py"
+    ],
+    "evidence_root": "runtime/evidence/home-image-closure-20261015",
+    "user_backend_change": "AutoDL ComfyUI existing FireRed1.1; still zero generation calls",
+    "tests": {
+      "existing_ark": 45,
+      "image_transport_after_exact_encoding_change": 7,
+      "new_entry_negative_guards": 5
+    },
+    "manual_content_edits": 0,
+    "manual_verdict_overrides": 0,
+    "rollback": "targeted restore from evidence/before and cloud-before; preserve originals, calls, outputs, and ledger; never delete directories",
+    "task_complete": false,
+    "final_external_block": "is_error=true and zero reported usage twice; no error code/message exposed; cause unknown",
+    "generation_calls": 0,
+    "product_ledger": "32/40 unchanged",
+    "new_entry_negative_guards": 6,
+    "remote_queue": "empty at14:44:22UTC",
+    "recovery": "On explicit resumption or concrete service change, GET existing session first; recover same-session output only, no repeated inference. Validate actual cloud contract, bind immutable repair3 run, full original Clef, first AutoDL image then remaining authorized images, true cloud blind+compare and hash validation, only then backed-up effective selection replacement. No video authorized."
+  },
+  "shot_admission_20261015": {
+    "status": "partial",
+    "updated_at": "2026-10-15T16:06:08.872014+00:00",
+    "generated_product_total": 37,
+    "generated_product_limit": 40,
+    "batch_attempts": 5,
+    "batch_limit": 8,
+    "pixel_approved": 0,
+    "effective_set_changed": false,
+    "video_authorized": false,
+    "tests": "tests.test_ark_agent.ShotAdmission: 9 passed",
+    "cloud_sessions": {
+      "pair_compare": "sesn-20261015152138-k99eo",
+      "review0203": "sesn-20261015150743-iv7iv",
+      "review0406": "sesn-20261015152104-e7mn2"
+    },
+    "evidence_dir": "runtime\\evidence\\home-image-closure-20261015",
+    "independent_verification": {
+      "executor": "parent independent review",
+      "command": "python -m unittest discover -s tests -p test_ark_agent.py",
+      "tests": 57,
+      "passed": 57,
+      "elapsed_seconds": 24.704,
+      "exit_code": 0,
+      "source": "parent actual command output on2026-10-16"
+    },
+    "remaining_attempts": 3,
+    "per_shot": {
+      "01": {
+        "text": "pass",
+        "generation": "v1_completed",
+        "pixel": "fail"
+      },
+      "02": {
+        "text": "ready",
+        "generation": "not_run",
+        "pixel": "not_run"
+      },
+      "03": {
+        "text": "pass",
+        "generation": "v1_completed",
+        "pixel": "fail"
+      },
+      "04": {
+        "text": "pass",
+        "generation": "v1_completed",
+        "pixel": "fail"
+      },
+      "05": {
+        "text": "pass",
+        "generation": "v1_completed",
+        "pixel": "fail"
+      },
+      "06": {
+        "text": "pass",
+        "generation": "v1_completed",
+        "pixel": "fail"
+      }
+    },
+    "common_skill": 12,
+    "home_skill": 7,
+    "remaining_plan": "One bounded shot03 prompt repair only after cloud reviewer passes; no other generation before diagnosis decision",
+    "budget_gap": "5 generated images failed cloud pixel audit +02 ungenerated: at least6 successful outputs still needed; remaining3",
+    "user_paused": true,
+    "new_submissions_allowed": false,
+    "pause_evidence": "runtime\\evidence\\home-image-closure-20261015\\paused-20261016.json"
+  }
+}

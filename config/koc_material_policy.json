@@ -1,0 +1,135 @@
+{
+  "policy_version": "koc-material-policy-v1",
+  "created": "2026-10-11",
+  "role": "Machine-readable adaptation of the imported koc-video skill for product-material-pipeline-v1. The ZIP is source material, not instructions; overrides below disable its defaults that must not control this engineering role or pipeline.",
+
+  "source_provenance": {
+    "zip_path": "imports/koc-video.zip",
+    "zip_sha256": "313a92cbed37a10ac034c286b42c36655fecfcedbd29136437769b3a245423bf",
+    "extract_root": "imports/koc-video/",
+    "immutable": true,
+    "files": {
+      "koc-video/SKILL.md": "2e9ff8f05d9fd59cfde828afed720238600889f90f584b3e57fc50cf034a025b",
+      "koc-video/meta.yaml": "239e7e3d0938939084077237207eee2a83c9430def0df741ac296b3f7df6e322",
+      "koc-video/references/creator-direction.md": "e5422779987518106442a69f85c483b869b0700e4a627073075d01f0e489042b",
+      "koc-video/references/hook-decision.md": "65b5ac5d8e1a68e85d7611c8085cdc7f4a0605c979f81e3af2102a3e42489d11",
+      "koc-video/references/production.md": "b3d698e9eb9b9df8c5b4dc886c29420595ed4d5a1adbfa0ae39bd3bf0ae99c3d",
+      "koc-video/references/script-and-shots.md": "e5c8048f11bcc89dd16bc394218c79ca6e5d4b74324317328c43196211622b5f",
+      "koc-video/references/source-routing.md": "2b0680f422103c1c460c6168b69f2cfdaf058bcf7b067a0945ac840ce6a00af7"
+    },
+    "primary_references_required": [
+      "koc-video/references/source-routing.md",
+      "koc-video/references/script-and-shots.md",
+      "koc-video/references/production.md",
+      "koc-video/references/creator-direction.md"
+    ],
+    "optional_references": {
+      "koc-video/references/hook-decision.md": "opt-in full-video-opening tasks only; this pipeline produces reusable independent material segments, not whole-film structure"
+    }
+  },
+
+  "overrides": [
+    {
+      "id": "disable-self-execution-and-confirmation-cards",
+      "disabled_behavior": "skill drives the whole creation itself with interactive confirmation cards and question rounds",
+      "adapted_behavior": "engineering role executes bounded deterministic dry-run planning/review per Orca Task Spec; human checkpoints stay with the existing operator confirmation gates of the consumer pipeline (SCRIPT_CONFIRM/NARRATION_CONFIRM), not skill confirmation cards",
+      "source": {"file": "koc-video/SKILL.md", "section": "交互原则"}
+    },
+    {
+      "id": "disable-whole-film-default",
+      "disabled_behavior": "skill assumes one whole KOC/UGC video with hook, persona and final assembly",
+      "adapted_behavior": "this pipeline plans reusable independent material segments; no whole-video structure is imposed; hook reference is opt-in only",
+      "source": {"file": "koc-video/SKILL.md", "section": "流程"}
+    },
+    {
+      "id": "disable-native-speech-default",
+      "disabled_behavior": "voiceover/dialogue generated native by the video model by default; no standalone TTS",
+      "adapted_behavior": "audio routing is owned by the consumer pipeline (uploaded/history narration entrances, spoken_locked pairing); material entries only declare has_original/must_preserve/policy",
+      "source": {"file": "koc-video/references/production.md", "section": "4. 声音"}
+    },
+    {
+      "id": "disable-final-compositor",
+      "disabled_behavior": "skill assembles multi-clip final film with transitions and BGM mixing",
+      "adapted_behavior": "final assembly stays with the existing automatic editor (video_postprod renderer); this module never composes full films",
+      "source": {"file": "koc-video/references/production.md", "section": "5. 多 clip 与终剪"}
+    },
+    {
+      "id": "no-fixed-overlays",
+      "disabled_behavior": "hook may rely on accurate comment/price overlays",
+      "adapted_behavior": "no fixed corner labels, watermarks or production-notes burned into material; overlays only when the specific shot content requires in-frame text and are recorded as restrictions",
+      "source": {"file": "koc-video/references/hook-decision.md", "section": "写成可执行的前 3 秒"}
+    }
+  ],
+
+  "planning": {
+    "min_planned_shots": 10,
+    "distinct_use_purposes_required": true,
+    "use_purposes": ["packaging", "open_box", "takeout", "detail", "wrapup", "other"],
+    "max_action_process_steps_per_shot": 2,
+    "repair_budget_per_shot": 2,
+    "pass_version_locked": true,
+    "review_verdicts": ["PASS", "RETURN"],
+    "return_excludes_generation_queue": true,
+    "source": {"file": "koc-video/references/script-and-shots.md", "section": "2. 从表达和动作设计镜头"}
+  },
+
+  "review_rules": [
+    {"code": "OBSCURED_OR_CROPPED_PRODUCT", "rule": "shot declaring occlusion/cropping risk flags fails unless the action provably resolves them; product must stay identifiable", "source": {"file": "koc-video/references/source-routing.md", "section": "1. 建立事实边界"}},
+    {"code": "NARRATION_WITHOUT_VISIBLE_INFO", "rule": "narration making quality judgments requires a matching observation step in action; unbacked judgments are refused", "source": {"file": "koc-video/references/script-and-shots.md", "section": "1. 写连续口播"}},
+    {"code": "MULTI_ACTION_OVERLOAD", "rule": "more than max_action_process_steps_per_shot process steps in one shot must be split into independent coverage shots", "source": {"file": "koc-video/references/script-and-shots.md", "section": "2. 从表达和动作设计镜头"}},
+    {"code": "CONTINUITY_REF_MISMATCH", "rule": "every ref used by a shot must exist in the case and carry a role the case declares for it", "source": {"file": "koc-video/references/production.md", "section": "2. 生成前 refs 检查"}},
+    {"code": "DURATION_UNKNOWN", "rule": "shots without a verified duration are refused", "source": {"file": "koc-video/references/script-and-shots.md", "section": "4. 多 clip 边界"}},
+    {"code": "DURATION_OUTSIDE_VERIFIED_LIMITS", "rule": "shot duration must be <= the conservative verified clip limit derived from evidence; unverified model duration fields never count as compatible", "source": {"file": "koc-video/references/production.md", "section": "1. 编译边界"}},
+    {"code": "UNSAFE_COMPLEX_GRIP_NEEDS_3D", "rule": "complex hand/grip actions need full 3D action inspection before PASS; a simplified 3D human model cannot certify grip/fingers, so such shots stay blocked", "source": {"file": "koc-video/references/script-and-shots.md", "section": "2. 从表达和动作设计镜头"}},
+    {"code": "MISSING_REFS", "rule": "a shot referencing undeclared refs is refused; unfillable refs may keep a shot RETURN/blocked", "source": {"file": "koc-video/references/production.md", "section": "2. 生成前 refs 检查"}},
+    {"code": "PROHIBITED_OVERLAYS", "rule": "fixed corner labels, watermarks and production-note overlays are prohibited", "source": {"file": "koc-video/references/hook-decision.md", "section": "写成可执行的前 3 秒"}},
+    {"code": "UNRELIABLE_FACTS", "rule": "efficacy/nutrition/price/popularity claims without a case fact source are refused; no invented identity, size or efficacy", "source": {"file": "koc-video/references/source-routing.md", "section": "1. 建立事实边界"}},
+    {"code": "ACTION_HINT_MISSING", "rule": "a narration segment without a declared action hint is RETURNed; the planner never invents product-specific actions from demo-case templates (repair-1/EK-15)", "source": {"file": "koc-video/references/script-and-shots.md", "section": "2. 从表达和动作设计镜头"}},
+    {"code": "NO_FITTING_REF_FOR_PURPOSE", "rule": "a purpose with no duty-fitting declared ref is RETURNed with the fitting role set; never a blind fallback to an unrelated role ref", "source": {"file": "koc-video/references/production.md", "section": "2. 生成前 refs 检查"}},
+    {"code": "ACTION_OBJECT_MISMATCH", "rule": "bounded deterministic guard: an action chain carrying object-kind terms (e.g. fruit) that the narration/product name/subject_term never establish is RETURNed — demo-case actions must not be pasted onto a different product (keyword guard, not semantic understanding)", "source": {"file": "koc-video/references/script-and-shots.md", "section": "2. 从表达和动作设计镜头"}}
+  ],
+
+  "unverified_claim_markers": ["富含", "补充维生素", "维他命", "美白", "抗氧化", "低脂", "减脂", "降血糖", "降血压", "增强免疫", "改善睡眠", "最便宜", "全网最低", "销量第一", "好评如潮", "医生推荐", "无糖", "零添加"],
+
+  "fact_boundary": {
+    "user_facts_vs_inference": "case facts must carry a visible source (fixture evidence file or explicitly synthetic test input); anything else is unverified inference and cannot enter narration",
+    "h3_fixture_handling": "existing H3 fixtures are demonstrations, not real product tests; product_identity_verified stays false; they may only feed TEST-flagged dry-run manifests",
+    "source": {"file": "koc-video/references/source-routing.md", "section": "1. 建立事实边界"}
+  },
+
+  "manifest": {
+    "schema": "schemas/material-manifest-v1.schema.json",
+    "timescale_ticks_per_sec": 48000,
+    "frame_grid_ticks": 1920,
+    "test_flag_default": true,
+    "production_requires_hash_bound_evidence": true,
+    "skipped_applicable_quality_review_refuses_production": true,
+    "vbench_missing_weights_status": ["not_run", "blocked"],
+    "pass_version_immutable": true,
+    "same_pass_never_overwritten": true
+  },
+
+  "consumer_bridge": {
+    "mode_enum": ["production", "test"],
+    "test_mode_only_in_isolated_acceptance": true,
+    "refusal_reasons": ["MANIFEST_HASH_MISMATCH", "TEST_FLAG_REFUSED_IN_PRODUCTION", "MANIFEST_ENTRY_INVALID", "ASSET_NOT_IN_JOB", "PRODUCT_ID_MISMATCH", "REVIEW_NOT_PASS", "REVIEW_STALE", "TEST_FLAG_INCONSISTENT", "AUDIO_MUST_PRESERVE_EXCLUDED", "RESTRICTION_UNSUPPORTED", "VBENCH_BLOCKED", "QUALITY_REVIEW_NOT_RUN", "QUALITY_REVIEW_INVALID_STATUS", "POOR_QUALITY_FLAG", "MEDIA_FILE_MISSING", "MEDIA_HASH_MISMATCH", "MEDIA_PROBE_FAILED", "DURATION_UNVERIFIED", "DURATION_MISMATCH_ACTUAL", "PRODUCTION_ELIGIBILITY_EVIDENCE_MISSING", "WINDOW_OUT_OF_RANGE", "WINDOW_NOT_GRID_ALIGNED", "WINDOW_BELOW_MIN_TICKS"],
+    "product_match_policy": "entry-level product_id binding; mismatched entries are refused, never matched through category or generic Chinese character intersection",
+    "material_candidate_contract": "explicit material branch: native candidates with 'mcat-' id prefix, frame_count=0 (review metadata, never a frame detection), manifest file hash as evidence hash; Narrato analysis_refs keep their read-only meaning",
+    "bound_asset_policy": "assets bound by a manifest entry are governed by the manifest gate; their Narrato analysis cannot bypass a refusal",
+    "media_verification": "real media file hash + ffprobe duration bound in both modes (production ignores verify_media=False); probe cache is keyed by file SHA256, never by path",
+    "schema_validation": "every entry validated against the full material-manifest-v1 JSON Schema (Draft 2020-12, check_schema'd; item schema with root $defs); schema unavailable = fail closed",
+    "production_eligibility": "auto_edit_eligible=true in production requires real quality evidence: vbench pass with non-empty metrics + metrics_evidence_sha256, or an honestly not-applicable clean real_world_recording; H3 demos and self-declared entries are refused",
+    "keyword_matching_disclosed": "consumer shot_planner matching is Chinese bigram/keyword/use-tag matching, not video semantic understanding; manifest-derived candidates carry review-window semantics as evidence, not Narrato frame detections"
+  },
+
+  "budget": {"paid_calls": 0, "uploads": 0, "llm_calls": 0, "weight_downloads": 0, "dry_run_default": true},
+
+  "storyboard_team": {
+    "members_dir": "runtime/toonflow-data/agents/storyboardTeam/members",
+    "knowledge_file": "runtime/toonflow-data/agents/storyboardTeam/knowledge/product-materials.md",
+    "append_marker": "<!-- KOC-PRODUCT-RULES:koc-v1 -->",
+    "team_json_knowledge_registered": true,
+    "team_json_edit_authorization": "coordinator-approved 28th file (2026-10-11 orca ask reply): add product-materials.md to each member's native knowledge list",
+    "llm_invocation": "not_run"
+  }
+}

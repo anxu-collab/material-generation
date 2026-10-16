@@ -1,0 +1,172 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "lab-human-score-table-v1.schema.json",
+  "title": "lab-human-score-table/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "status",
+    "run_id",
+    "utc",
+    "authority",
+    "bindings",
+    "clef",
+    "shots",
+    "selected_ids",
+    "operator_id",
+    "submitted_utc"
+  ],
+  "properties": {
+    "schema": {
+      "const": "lab-human-score-table/v1"
+    },
+    "status": {
+      "enum": [
+        "pending",
+        "submitted"
+      ]
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "utc": {
+      "type": "string",
+      "minLength": 1
+    },
+    "authority": {
+      "const": "human_over_clef"
+    },
+    "bindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "review_sha256",
+        "creation_sha256",
+        "case_sha256",
+        "consumer_policy",
+        "clef_gate_sha256"
+      ],
+      "properties": {
+        "review_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "creation_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "case_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "consumer_policy": {
+          "type": "string",
+          "minLength": 1
+        },
+        "clef_gate_sha256": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "clef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "passed",
+        "decisions"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "decided",
+            "clef_unavailable",
+            "absent"
+          ]
+        },
+        "passed": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "decisions": {
+          "type": "object"
+        }
+      }
+    },
+    "shots": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "shot_id",
+          "story_beat",
+          "clef_reference",
+          "user_rank",
+          "score",
+          "selected",
+          "note"
+        ],
+        "properties": {
+          "shot_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "story_beat": {
+            "type": "string"
+          },
+          "clef_reference": {
+            "type": "string"
+          },
+          "user_rank": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1
+          },
+          "score": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "maximum": 5
+          },
+          "selected": {
+            "type": "boolean"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "selected_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "operator_id": {
+      "type": "string"
+    },
+    "submitted_utc": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "table_sha256": {
+      "type": "string"
+    }
+  }
+}

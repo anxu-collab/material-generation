@@ -1,0 +1,243 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:laox:director-lab:material-manifest-v1",
+  "title": "Reviewed material manifest v1 (hash-bound, review-gated, consumer-importable)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "manifest_id", "created_utc", "policy_version", "test_flag", "source_case", "entries"],
+  "properties": {
+    "schema_version": {"const": "material-manifest/v1"},
+    "manifest_id": {"$ref": "#/$defs/id"},
+    "created_utc": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T"},
+    "policy_version": {"type": "string", "minLength": 1, "maxLength": 64},
+    "test_flag": {"type": "boolean"},
+    "source_case": {"$ref": "#/$defs/id"},
+    "entries": {
+      "type": "array", "minItems": 1, "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["material_id", "shot_id", "product_id", "version", "path", "source_sha256", "review_status", "review", "semantics", "features", "narration", "keywords", "usable_window", "audio", "references", "restrictions", "technical", "visual", "vbench", "applicability", "evidence", "test_flag", "generated", "auto_edit_eligible"],
+        "properties": {
+          "material_id": {"$ref": "#/$defs/id"},
+          "shot_id": {"$ref": "#/$defs/id"},
+          "product_id": {"$ref": "#/$defs/id"},
+          "version": {"type": "integer", "minimum": 1},
+          "path": {"type": "string", "minLength": 1, "maxLength": 4096},
+          "source_sha256": {"$ref": "#/$defs/hash"},
+          "review_status": {"const": "PASS"},
+          "review": {
+            "type": "object", "additionalProperties": false,
+            "required": ["verdict", "content_sha256", "reviewer", "problems"],
+            "properties": {
+              "verdict": {"const": "PASS"},
+              "content_sha256": {"$ref": "#/$defs/hash", "description": "Hash of the exported entry content this verdict is bound to; a changed content hash makes the review stale."},
+              "reviewer": {"type": "string", "maxLength": 100},
+              "checked_utc": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}"},
+              "problems": {"type": "array", "maxItems": 0, "items": {}}
+            }
+          },
+          "semantics": {
+            "type": "object", "additionalProperties": false,
+            "required": ["summary", "person", "action", "location"],
+            "properties": {
+              "summary": {"type": "string", "minLength": 1, "maxLength": 2000},
+              "person": {"oneOf": [{"type": "null"}, {"type": "string", "maxLength": 500}]},
+              "action": {
+                "type": "object", "additionalProperties": false,
+                "required": ["start", "process", "end"],
+                "properties": {
+                  "start": {"type": "string", "maxLength": 2000},
+                  "process": {"type": "array", "maxItems": 6, "items": {"type": "string", "maxLength": 2000}},
+                  "end": {"type": "string", "maxLength": 2000}
+                }
+              },
+              "location": {"oneOf": [{"type": "null"}, {"type": "string", "maxLength": 500}]},
+              "observation_texts": {"type": "array", "maxItems": 16, "items": {"type": "string", "maxLength": 2000},
+                "description": "Review-window semantics used as consumer evidence; NOT per-frame model detections."}
+            }
+          },
+          "features": {
+            "type": "object", "additionalProperties": false,
+            "required": ["framing", "camera", "movement", "visual_keywords"],
+            "properties": {
+              "framing": {"type": "string", "maxLength": 200},
+              "camera": {"type": "string", "maxLength": 200},
+              "movement": {"type": "string", "maxLength": 200},
+              "visual_keywords": {"type": "array", "maxItems": 32, "items": {"type": "string", "maxLength": 100}}
+            }
+          },
+          "narration": {
+            "type": "object", "additionalProperties": false,
+            "required": ["text", "language"],
+            "properties": {"text": {"type": "string", "maxLength": 2000}, "language": {"const": "zh"}}
+          },
+          "keywords": {"type": "array", "maxItems": 32, "items": {"type": "string", "maxLength": 100}},
+          "usable_window": {
+            "type": "object", "additionalProperties": false,
+            "required": ["start_sec", "end_sec"],
+            "properties": {
+              "start_sec": {"type": "number", "minimum": 0},
+              "end_sec": {"type": "number", "exclusiveMinimum": 0},
+              "grid_ticks": {"const": 1920}
+            },
+            "description": "Seconds map to 48000 ticks/s on a 1920-tick (25fps) grid; exporter must emit grid-aligned values."
+          },
+          "audio": {
+            "type": "object", "additionalProperties": false,
+            "required": ["has_original", "must_preserve", "policy"],
+            "properties": {
+              "has_original": {"type": "boolean"},
+              "must_preserve": {"type": "boolean"},
+              "policy": {"enum": ["discard_allowed", "must_preserve_original", "silent_broll_only"]}
+            }
+          },
+          "references": {
+            "type": "array", "items": {
+              "type": "object", "additionalProperties": false,
+              "required": ["ref_id", "role"],
+              "properties": {"ref_id": {"$ref": "#/$defs/id"}, "role": {"type": "string", "maxLength": 200}, "path": {"type": "string", "maxLength": 4096}, "sha256": {"$ref": "#/$defs/hash"}}
+            }
+          },
+          "restrictions": {"type": "array", "maxItems": 16, "items": {"type": "string", "maxLength": 200},
+            "description": "Empty means unrestricted. The consumer bridge currently supports NO restrictions and explicitly refuses any non-empty list rather than silently ignoring it."},
+          "technical": {
+            "type": "object", "additionalProperties": false,
+            "required": ["duration_sec", "duration_source"],
+            "properties": {
+              "duration_sec": {"oneOf": [{"type": "null"}, {"type": "number", "exclusiveMinimum": 0}]},
+              "duration_source": {"enum": ["probe_evidence", "fixture_inventory", "unverified", "unknown"]},
+              "container": {"type": "string", "maxLength": 50},
+              "width": {"type": "integer", "minimum": 1},
+              "height": {"type": "integer", "minimum": 1}
+            },
+            "allOf": [{"if": {"properties": {"duration_sec": {"type": "null"}}, "required": ["duration_sec"]}, "then": {"properties": {"duration_source": {"enum": ["unknown"]}}}}]
+          },
+          "visual": {
+            "type": "object", "additionalProperties": false,
+            "required": ["quality_flags", "occlusion"],
+            "properties": {
+              "quality_flags": {"type": "array", "maxItems": 16, "items": {"enum": ["obscured_product", "cropped_product", "poor_lighting", "motion_blur", "text_unreadable"]}},
+              "occlusion": {"enum": ["unknown", "none", "partial", "severe"]}
+            }
+          },
+          "vbench": {
+            "type": "object", "additionalProperties": false,
+            "required": ["applicable", "status"],
+            "properties": {
+              "applicable": {"type": "boolean"},
+              "status": {"enum": ["not_run", "blocked", "pass"]},
+              "metrics": {"type": "object", "maxProperties": 16},
+              "metrics_evidence_sha256": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/hash"}]},
+              "reason": {"type": "string", "maxLength": 500}
+            },
+            "allOf": [
+              {"if": {"properties": {"status": {"const": "pass"}}, "required": ["status"]},
+               "then": {"required": ["metrics", "metrics_evidence_sha256"],
+                        "properties": {"metrics": {"minProperties": 1}, "metrics_evidence_sha256": {"$ref": "#/$defs/hash"}}}}
+            ],
+            "description": "This round emits only not_run/blocked (weights not downloaded; never invent PASS). 'pass' exists for FUTURE real metric runs only and always requires non-empty metrics plus hash-bound evidence."
+          },
+          "applicability": {
+            "type": "object", "additionalProperties": false,
+            "required": ["auto_edit", "uses"],
+            "properties": {"auto_edit": {"type": "boolean"}, "uses": {"type": "array", "minItems": 1, "maxItems": 6, "items": {"enum": ["packaging", "open_box", "takeout", "detail", "wrapup", "other"]}}}
+          },
+          "evidence": {
+            "type": "object", "additionalProperties": false,
+            "required": ["probe_sha256", "provenance"],
+            "properties": {
+              "probe_sha256": {"$ref": "#/$defs/hash"},
+              "review_evidence_path": {"type": "string", "maxLength": 4096},
+              "metrics_evidence_path": {"oneOf": [{"type": "null"}, {"type": "string", "maxLength": 4096}],
+                "description": "Required when vbench.status=pass: a real evidence file whose SHA256 equals vbench.metrics_evidence_sha256 AND whose CONTENT satisfies $defs.metrics_evidence (bound to this entry's media hash, metrics and verdict)."},
+              "visual_review_path": {"type": "string", "maxLength": 4096,
+                "description": "Required for production eligibility: a real visual-review evidence file whose SHA256 equals visual_review_sha256 and whose CONTENT satisfies $defs.visual_review_evidence (bound to this entry's media/material/version/window with verdict pass). A not-applicable VBench declaration is NOT visual review."},
+              "visual_review_sha256": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/hash"}]},
+              "provenance": {
+                "type": "object", "additionalProperties": false,
+                "required": ["origin", "product_identity_verified"],
+                "properties": {
+                  "origin": {"enum": ["existing_h3_generated_demo", "real_world_recording", "generated_for_case"]},
+                  "product_identity_verified": {"type": "boolean",
+                    "description": "Production eligibility requires true; an unverified identity stays blocked (never promoted by flags)."},
+                  "note": {"type": "string", "maxLength": 500}
+                }
+              }
+            }
+          },
+          "test_flag": {"type": "boolean"},
+          "generated": {
+            "type": "object", "additionalProperties": false,
+            "required": ["status", "verified_real_product_test"],
+            "properties": {
+              "status": {"enum": ["existing_footage_demo", "to_be_generated", "not_generated_test_only", "real_world_recording"]},
+              "verified_real_product_test": {"type": "boolean"},
+              "provider": {"oneOf": [{"type": "null"}, {"type": "string", "maxLength": 100}]}
+            }
+          },
+          "auto_edit_eligible": {"type": "boolean",
+            "description": "True only with hash-bound production evidence and no skipped applicable quality review. TEST-flagged entries must be false."}
+        },
+        "allOf": [
+          {"if": {"properties": {"test_flag": {"const": true}}, "required": ["test_flag"]}, "then": {"properties": {"auto_edit_eligible": {"const": false}}}},
+          {"if": {"properties": {"generated": {"properties": {"status": {"const": "existing_footage_demo"}}, "required": ["status"]}}, "required": ["generated"]}, "then": {"properties": {"evidence": {"properties": {"provenance": {"properties": {"origin": {"const": "existing_h3_generated_demo"}}}}}}}},
+          {"if": {"properties": {"vbench": {"properties": {"status": {"const": "pass"}}, "required": ["status"]}}, "required": ["vbench"]},
+           "then": {"properties": {"evidence": {"required": ["metrics_evidence_path"], "properties": {"metrics_evidence_path": {"type": "string"}}}}}}
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"},
+    "hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "metrics_evidence": {
+      "type": "object",
+      "description": "CONTENT CONTRACT of the side JSON file named by evidence.metrics_evidence_path when vbench.status=pass (EK-12). The consumer parses the file and requires: source_sha256 == the entry's media source_sha256 (a report for another video is refused); status == 'pass' (failed/not_run/blocked reports cannot back a pass claim); metrics == vbench.metrics declared in the entry (declared and reported results must be equal). Optional binding keys material_id/version/window, when present, must match the entry. This defines parsing only — no inference engine, no invented scores. Unit-test fixtures carrying this shape must be labeled UNIT ONLY and are never real VBench results.",
+      "required": ["source_sha256", "status", "metrics"],
+      "properties": {
+        "evidence_type": {"const": "vbench-metrics/v1"},
+        "source_sha256": {"$ref": "#/$defs/hash"},
+        "status": {"enum": ["pass", "fail", "not_run", "blocked"]},
+        "metrics": {"type": "object", "maxProperties": 16},
+        "material_id": {"$ref": "#/$defs/id"},
+        "version": {"type": "integer", "minimum": 1},
+        "window": {"type": "object", "required": ["start_sec", "end_sec"],
+                   "properties": {"start_sec": {"type": "number", "minimum": 0}, "end_sec": {"type": "number", "exclusiveMinimum": 0}}},
+        "test_fixture": {"type": "string", "maxLength": 200,
+          "description": "Honesty label for synthetic fixtures (e.g. 'UNIT ONLY — synthetic validator fixture, not real VBench scores'). Real evidence files do not need it."}
+      },
+      "additionalProperties": true
+    },
+    "visual_review_evidence": {
+      "type": "object",
+      "description": "CONTENT CONTRACT of the side JSON file named by evidence.visual_review_path for production-eligible entries (EK-13). The consumer validates the parsed file against THIS contract (required fields + types) and then binds content to the entry: source_sha256 == the entry's media hash; material_id/version == the entry's current values; window == the entry's usable_window (stale version/window refused); verdict == 'pass'; reviewer and checked_utc present; product_identity carries an explicit VERIFIED identity-check result bound to the entry's product (and, when declared, the reference media hash) — the manifest's self-declared provenance bool never substitutes for it. A VBench not-applicable declaration is NOT a substitute. This round produces no real visual-review evidence files: existing H3 demo material stays TEST/blocked; validator unit fixtures must be labeled UNIT ONLY.",
+      "required": ["source_sha256", "material_id", "version", "window", "verdict", "reviewer", "checked_utc", "product_identity"],
+      "properties": {
+        "evidence_type": {"const": "visual-review/v1"},
+        "source_sha256": {"$ref": "#/$defs/hash"},
+        "material_id": {"$ref": "#/$defs/id"},
+        "version": {"type": "integer", "minimum": 1},
+        "window": {"type": "object", "required": ["start_sec", "end_sec"],
+                   "properties": {"start_sec": {"type": "number", "minimum": 0}, "end_sec": {"type": "number", "exclusiveMinimum": 0}}},
+        "verdict": {"enum": ["pass", "fail", "blocked"]},
+        "reviewer": {"type": "string", "minLength": 1, "maxLength": 100},
+        "checked_utc": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T"},
+        "product_identity": {
+          "type": "object", "additionalProperties": false,
+          "required": ["verified", "product_id"],
+          "properties": {
+            "verified": {"type": "boolean",
+              "description": "Must be true for production eligibility; an unverified identity keeps the entry blocked."},
+            "product_id": {"$ref": "#/$defs/id"},
+            "reference_sha256": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/hash"}],
+              "description": "Optional: the reference media hash the identity check compared against; when present it must equal the entry's source_sha256."},
+            "method": {"type": "string", "maxLength": 200}
+          }
+        },
+        "checks": {"type": "object"},
+        "test_fixture": {"type": "string", "maxLength": 200,
+          "description": "Honesty label for synthetic fixtures (e.g. 'UNIT ONLY — synthetic validator fixture, not a real human visual review')."}
+      },
+      "additionalProperties": true
+    }
+  }
+}

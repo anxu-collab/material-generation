@@ -1,0 +1,60 @@
+# Third-party sources and toolchains (deployed, not authored)
+vendor/
+# Service data, caches, temp, logs
+runtime/cache/
+runtime/tmp/
+runtime/logs/
+runtime/venvs/
+runtime/toonflow-data/
+runtime/.agentInstall/
+# Auto-generated evidence stays local (not tracked), reports reference paths
+runtime/evidence/
+# Python
+.pytest_cache/
+__pycache__/
+*.pyc
+# Node/Bun leftovers inside own dirs
+node_modules/
+
+# Project-local credentials (never tracked)
+*.local.env
+.env
+.env.*
+
+# Product photos, reference images, and host persona stay on this machine.
+cases/
+material-library/index.json
+material-library/*/
+runtime/material-flow/
+runtime/seedream-image-v1/
+runtime/material-analysis/
+runtime/h3-autodl-z0902-integration/
+
+# Stills, clips, posters, and reference images stay on this machine.
+output/**/*.jpg
+output/**/*.jpeg
+output/**/*.png
+output/**/*.webp
+material-library/**/*.mp4
+material-library/**/*.mov
+material-library/**/*.webm
+material-library/**/*.jpg
+material-library/**/*.jpeg
+material-library/**/*.png
+material-library/**/*.webp
+cases/**/*.jpg
+cases/**/*.jpeg
+cases/**/*.png
+cases/**/*.webp
+runtime/**/*.mp4
+runtime/**/*.mov
+runtime/**/*.webm
+runtime/**/*.jpg
+runtime/**/*.jpeg
+runtime/**/*.png
+runtime/**/*.webp
+
+# Local rollback snapshots and unit-test authorization dumps
+runtime/backups/
+runtime/h3-autodl-v1/authorization/
+runtime/seedream-image-v1/authorization-test-1.json

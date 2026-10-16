@@ -1,0 +1,33 @@
+{
+  "module": "product-material-pipeline-v1",
+  "updated_at": "2026-10-16T00:55:00+08:00",
+  "phase": "shot-admission-image-production-20261015",
+  "status": "partial",
+  "current_step": "用户已暂停。停止新生成和新云端请求。桌面支架六镜里 01/03/04/05/06 已出图且像素未过，02 未生成。累计 37/40，剩 3 次。在途会话只允许恢复时先 GET，不重发。",
+  "user_paused": true,
+  "new_submissions_allowed": false,
+  "generated_product_total": 37,
+  "generated_product_limit": 40,
+  "remaining_attempts": 3,
+  "pixel_approved": 0,
+  "effective_set_changed": false,
+  "video_authorized": false,
+  "images": "output/laox-stand-home-20261015/",
+  "evidence": "runtime/evidence/home-image-closure-20261015/",
+  "pause_record": "runtime/evidence/home-image-closure-20261015/paused-20261016.json",
+  "plan": "docs/modules/product-material-pipeline-v1/IMPLEMENTATION_PLAN.md",
+  "per_shot": {
+    "01": {"text": "pass", "generation": "v1_completed", "pixel": "fail"},
+    "02": {"text": "ready", "generation": "not_run", "pixel": "not_run"},
+    "03": {"text": "pass", "generation": "v1_completed", "pixel": "fail"},
+    "04": {"text": "pass", "generation": "v1_completed", "pixel": "fail"},
+    "05": {"text": "pass", "generation": "v1_completed", "pixel": "fail"},
+    "06": {"text": "pass", "generation": "v1_completed", "pixel": "fail"}
+  },
+  "preserved_sessions": {
+    "first06-compare": "sesn-20261015160049-affff",
+    "scoped-repair03-prompt": "sesn-20261015160831-qshjc",
+    "generation-diagnosis": "sesn-20261015155540-imyz1"
+  },
+  "older_phases": "2026-10-16 从本文件移除已结束阶段的状态块。阶段证据仍在 runtime/evidence/ 对应目录，不作为当前接续。"
+}
